@@ -6,25 +6,51 @@ import React, { useEffect, useState } from "react";
 import supabase from "../services/supabaseClient";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
-import IMAGES from "../assets/images.js";
 import { Form } from "react-bootstrap";
-import Image from "react-bootstrap/Image";
 import "../assets/styles.css";
 
 const StockList = () => {
   const [fetchError, setFetchError] = useState(null);
   const [items, setItems] = useState(null);
   const [show, setShow] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isEditing, setIsEditing] = useState(null); // To track which field is being edited
 
-  // Close popup modal
-  const handleClose = () => setShow(false);
+  // Close popup modals
+  const handleClose = () => {
+    setShow(false);
+    setShowDeletePopup(false);
+  };
 
   // Open popup modal with item
   const handleShow = (item) => {
     setSelectedItem(item);
     setShow(true);
+  };
+
+  const handleDeleteButton = () => {
+    setShowDeletePopup(true);
+  };
+
+  const handleDeleteItem = async () => {
+    if (selectedItem) {
+      const { itemID } = selectedItem;
+      const { data, error } = await supabase
+        .from("Item")
+        .delete()
+        .match({ itemID });
+
+      if (error) {
+        console.error("Error deleting item:", error);
+        alert("Failed to delete item.");
+      } else {
+        console.log("Item deleted successfully:", data);
+        alert("Item deleted successfully.");
+        fetchItems(); // Refresh items list
+        handleClose(); // Close only the delete confirmation modal
+      }
+    }
   };
 
   // Increment quantity
@@ -83,9 +109,8 @@ const StockList = () => {
       } else {
         console.log("Item updated successfully:", data);
         alert("Changes saved successfully.");
-        setShow(false); // Close the modal after saving
-        // Optionally, refetch items to reflect the update
-        fetchItems();
+        setShow(false); // Close the item details modal after saving
+        fetchItems(); // Refresh items list
       }
 
       setIsEditing(null);
@@ -188,12 +213,6 @@ const StockList = () => {
         <Modal.Body>
           {selectedItem ? (
             <>
-              {selectedItem.imageName && IMAGES[selectedItem.imageName] ? (
-                <Image src={IMAGES[selectedItem.imageName]} fluid />
-              ) : (
-                <p>No image available</p>
-              )}
-              <br />
               {isEditing === "description" ? (
                 <Form.Control
                   as="textarea"
@@ -224,13 +243,16 @@ const StockList = () => {
                 />
               ) : (
                 <>
-                  <p>
-                    Price: ${selectedItem.itemPrice}{" "}
+                  <span className="bold-label">
+                    Price:{" "}
+                    <span className="normal-value">
+                      ${selectedItem.itemPrice}{" "}
+                    </span>
                     <i
                       className="bi bi-pencil-square clickable-icon"
                       onClick={() => handleEditClick("price")}
                     ></i>
-                  </p>
+                  </span>
                 </>
               )}
               <div className="stock-quantity">
@@ -257,11 +279,33 @@ const StockList = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
+          <Button variant="danger" onClick={handleDeleteButton}>
+            Delete
           </Button>
-          <Button variant="primary" onClick={handleSaveChanges}>
+          <Button variant="success" onClick={handleSaveChanges}>
             Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={showDeletePopup}
+        onHide={() => setShowDeletePopup(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete{" "}
+          {selectedItem ? selectedItem.itemName : ""}?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeletePopup(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteItem}>
+            Confirm Delete
           </Button>
         </Modal.Footer>
       </Modal>

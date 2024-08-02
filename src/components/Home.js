@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import supabase from "../services/supabaseClient";
-import IMAGES from "../assets/images.js";
 
 export default function Home() {
   const [fetchError, setFetchError] = useState(null);
@@ -35,7 +34,6 @@ export default function Home() {
           {items.map((item) => (
             <div>
               <p>{item.itemName}</p>
-              <img src={IMAGES[item.imageName]} />
             </div>
           ))}
         </div>
