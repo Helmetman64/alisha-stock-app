@@ -18,6 +18,7 @@
   grid-template-columns: 1fr 3fr;
   align-items: center;
   overflow: hidden;
+  min-height: 80px; /* Increased height for thicker navbar */
 }
 
 .navbar ul {
@@ -25,6 +26,13 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   justify-self: end;
+  height: 100%; /* Ensure ul stretches to navbar height */
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  height: 100%; /* Stretch to full height of navbar */
 }
 
 .navItem a {
@@ -32,12 +40,18 @@
   font-size: 0.9rem;
   font-weight: 400;
   text-decoration: none;
-  transition: color 0.3s ease-out;
+  transition: color 0.3s ease-out, background-color 0.3s ease-out; /* Transition for smooth hover effect */
+  padding: 0 20px; /* Adjust padding as needed */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center align text */
+  height: 100%; /* Stretch link to full height of navItem */
 }
 
 .navItem a:hover {
   color: #3498db;
-  background-color: #3498db;
+  background-color: #f1f1f1; /* Changed to a lighter background color for hover */
+  height: 100%; /* Ensure the item takes up full height on hover */
 }
 
 /* MOBILE MENU & ANIMATION */
@@ -70,8 +84,18 @@
   transform: translateY(-8px) rotate(-45deg);
 }
 
+/* TITLE */
+h1 {
+  white-space: nowrap; /* Prevents wrapping */
+  font-size: 2rem; /* Adjust as needed */
+}
+
 /* Media Queries */
-@media only screen and (max-width: 720px) { 
+@media only screen and (max-width: 720px) {
+  h1 {
+    font-size: 1.5rem; /* Adjust as needed for smaller screens */
+  }
+
   .features {
     flex-direction: column;
     padding: 50px;
@@ -84,10 +108,9 @@
     position: fixed;
     z-index: 2;
     justify-content: start;
-    top: 115px;
+    top: 80px;
     background-color: #ffecc4;
     width: 100%;
-    height: calc(100vh - 55px);
     transform: translateX(-101%);
     transition: transform 0.3s ease-out;
     text-align: center;
@@ -95,12 +118,11 @@
   }
 
   .navbar li {
+    height: fit-content;
     padding: 15px;
+    
   }
 
-  .navbar li:first-child {
-    margin-top: 50px;
-  }
 
   .navbar li a {
     font-size: 1rem;
@@ -113,5 +135,15 @@
 
   .mobileNav {
     transform: translateX(0%) !important;
+  }
+
+  .navItem a {
+    justify-content: start;
+    width: 100%;
+    padding: 15px;
+  }
+
+  .navbar ul {
+    grid-template-columns: none;
   }
 }
