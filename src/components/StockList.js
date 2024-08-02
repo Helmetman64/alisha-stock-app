@@ -12,25 +12,31 @@ import "../assets/styles.css";
 const StockList = () => {
   const [fetchError, setFetchError] = useState(null);
   const [items, setItems] = useState(null);
-  const [show, setShow] = useState(false);
+  const [showClickedItem, setShowClickedItem] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [showAddItemPopup, setShowAddItemPopup] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isEditing, setIsEditing] = useState(null); // To track which field is being edited
 
   // Close popup modals
   const handleClose = () => {
-    setShow(false);
+    setShowClickedItem(false);
     setShowDeletePopup(false);
+    setShowAddItemPopup(false);
   };
 
   // Open popup modal with item
   const handleShow = (item) => {
     setSelectedItem(item);
-    setShow(true);
+    setShowClickedItem(true);
   };
 
   const handleDeleteButton = () => {
     setShowDeletePopup(true);
+  };
+
+  const handleAddItemButton = () => {
+    setShowAddItemPopup(true);
   };
 
   const handleDeleteItem = async () => {
@@ -109,7 +115,7 @@ const StockList = () => {
       } else {
         console.log("Item updated successfully:", data);
         alert("Changes saved successfully.");
-        setShow(false); // Close the item details modal after saving
+        setShowClickedItem(false); // Close the item details modal after saving
         fetchItems(); // Refresh items list
       }
 
@@ -127,7 +133,6 @@ const StockList = () => {
     } else if (data) {
       setItems(data);
       setFetchError(null);
-      console.log(data);
     }
   };
 
@@ -141,6 +146,23 @@ const StockList = () => {
         <h1>Stock</h1>
         <div className="body">
           <Row>
+            {/* Empty Card */}
+            <Col xs={12} sm={6} md={6} lg={4} xl={3} className="mb-4">
+              <Card
+                style={{ width: "100%" }}
+                className="clickable-card"
+                onClick={handleAddItemButton}
+              >
+                <Card.Body>
+                  <Card.Title>Add New Item</Card.Title>
+                  <Card.Text>
+                    {/* You can add additional actions or instructions here */}
+                    Click here to add a new item.
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+
             {items &&
               items.map((item) => (
                 <Col
@@ -182,7 +204,8 @@ const StockList = () => {
         </div>
       </Container>
 
-      <Modal show={show} onHide={handleClose} centered>
+      {/* CLICKED ITEM POP UP */}
+      <Modal show={showClickedItem} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>
             {selectedItem ? (
@@ -287,7 +310,33 @@ const StockList = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      {/* ADD ITEM POP UP */}
+      <Modal show={showAddItemPopup} onHide={handleClose} centered>
+        <Modal.Header>
+          <Modal.Title>
+            <Form.Label>Item Title</Form.Label>
+            <Form.Control type="text" placeholder="Item Title"></Form.Control>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Label>Item Description</Form.Label>
+            <Form.Control type="text"></Form.Control>
+            <Form.Label>Item Price</Form.Label>
+            <Form.Control type="number"></Form.Control>
+            <Form.Label>Item Quantity</Form.Label>
+            <Form.Control type="number"></Form.Control>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="success">Save changes</Button>
+        </Modal.Footer>
+      </Modal>
 
+      {/* DELETE ITEM POP UP */}
       <Modal
         show={showDeletePopup}
         onHide={() => setShowDeletePopup(false)}
