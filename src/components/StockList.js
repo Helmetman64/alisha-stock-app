@@ -15,17 +15,35 @@ const StockList = () => {
   const [showClickedItem, setShowClickedItem] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showAddItemPopup, setShowAddItemPopup] = useState(false);
+  const [showAddItemConfirm, setShowAddItemConfirm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [isEditing, setIsEditing] = useState(null); // To track which field is being edited
+  const [isEditing, setIsEditing] = useState(null);
+  const [newItem, setNewItem] = useState({
+    itemName: "",
+    itemDesc: "",
+    itemPrice: 0,
+    itemQTY: 0,
+  });
+  const [errors, setErrors] = useState({
+    itemName: "",
+    itemDesc: "",
+    itemPrice: "",
+    itemQTY: "",
+  });
 
-  // Close popup modals
   const handleClose = () => {
     setShowClickedItem(false);
     setShowDeletePopup(false);
     setShowAddItemPopup(false);
+    setShowAddItemConfirm(false);
+    setErrors({
+      itemName: "",
+      itemDesc: "",
+      itemPrice: "",
+      itemQTY: "",
+    });
   };
 
-  // Open popup modal with item
   const handleShow = (item) => {
     setSelectedItem(item);
     setShowClickedItem(true);
@@ -53,13 +71,69 @@ const StockList = () => {
       } else {
         console.log("Item deleted successfully:", data);
         alert("Item deleted successfully.");
-        fetchItems(); // Refresh items list
-        handleClose(); // Close only the delete confirmation modal
+        fetchItems();
+        handleClose();
       }
     }
   };
 
-  // Increment quantity
+  const validateInputs = () => {
+    let isValid = true;
+    const newErrors = {
+      itemName: "",
+      itemDesc: "",
+      itemPrice: "",
+      itemQTY: "",
+    };
+
+    if (!newItem.itemName.trim()) {
+      newErrors.itemName = "Item name is required.";
+      isValid = false;
+    }
+
+    if (!newItem.itemDesc.trim()) {
+      newErrors.itemDesc = "Item description is required.";
+      isValid = false;
+    }
+
+    if (newItem.itemPrice <= 0) {
+      newErrors.itemPrice = "Item price must be greater than 0.";
+      isValid = false;
+    }
+
+    if (newItem.itemQTY < 0) {
+      newErrors.itemQTY = "Item quantity cannot be negative.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleAddNewItem = async () => {
+    if (!validateInputs()) return;
+
+    const { data, error } = await supabase.from("Item").insert([newItem]);
+
+    if (error) {
+      console.error("Error adding new item:", error);
+      alert("Failed to add new item.");
+    } else {
+      console.log("New item added successfully:", data);
+      alert("New item added successfully.");
+      fetchItems();
+      handleClose();
+    }
+  };
+
+  const handleNewItemChange = (e) => {
+    const { name, value } = e.target;
+    setNewItem((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
   const incrementQuantity = () => {
     setSelectedItem((prevState) => ({
       ...prevState,
@@ -67,7 +141,6 @@ const StockList = () => {
     }));
   };
 
-  // Decrement quantity
   const decrementQuantity = () => {
     setSelectedItem((prevState) => ({
       ...prevState,
@@ -75,7 +148,6 @@ const StockList = () => {
     }));
   };
 
-  // Handle quantity change from Form.Control
   const handleQuantityChange = (e) => {
     const newValue = Number(e.target.value);
     if (!isNaN(newValue) && newValue >= 0) {
@@ -86,12 +158,10 @@ const StockList = () => {
     }
   };
 
-  // Toggle editing mode for title, description, or price
   const handleEditClick = (field) => {
     setIsEditing(field);
   };
 
-  // Handle change in title, description, or price
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setSelectedItem((prevState) => ({
@@ -100,7 +170,6 @@ const StockList = () => {
     }));
   };
 
-  // Save changes to Supabase
   const handleSaveChanges = async () => {
     if (selectedItem) {
       const { itemID, itemName, itemDesc, itemPrice, itemQTY } = selectedItem;
@@ -115,8 +184,8 @@ const StockList = () => {
       } else {
         console.log("Item updated successfully:", data);
         alert("Changes saved successfully.");
-        setShowClickedItem(false); // Close the item details modal after saving
-        fetchItems(); // Refresh items list
+        setShowClickedItem(false);
+        fetchItems();
       }
 
       setIsEditing(null);
@@ -146,7 +215,6 @@ const StockList = () => {
         <h1>Stock</h1>
         <div className="body">
           <Row>
-            {/* Empty Card */}
             <Col xs={12} sm={6} md={6} lg={4} xl={3} className="mb-4">
               <Card
                 style={{ width: "100%" }}
@@ -155,10 +223,7 @@ const StockList = () => {
               >
                 <Card.Body>
                   <Card.Title>Add New Item</Card.Title>
-                  <Card.Text>
-                    {/* You can add additional actions or instructions here */}
-                    Click here to add a new item.
-                  </Card.Text>
+                  <Card.Text>Click here to add a new item.</Card.Text>
                 </Card.Body>
               </Card>
             </Col>
@@ -204,7 +269,6 @@ const StockList = () => {
         </div>
       </Container>
 
-      {/* CLICKED ITEM POP UP */}
       <Modal show={showClickedItem} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -255,7 +319,6 @@ const StockList = () => {
                   </p>
                 </>
               )}
-              <hr className="divider" />
               {isEditing === "price" ? (
                 <Form.Control
                   type="number"
@@ -289,7 +352,7 @@ const StockList = () => {
                     value={selectedItem.itemQTY}
                     className="stock-qty"
                     onChange={handleQuantityChange}
-                    min="0" // Ensure the minimum value is 0
+                    min="0"
                   />
                 </Form>
                 <Button className="stock-qty-btn" onClick={decrementQuantity}>
@@ -310,29 +373,99 @@ const StockList = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
       {/* ADD ITEM POP UP */}
       <Modal show={showAddItemPopup} onHide={handleClose} centered>
         <Modal.Header>
-          <Modal.Title>
-            <Form.Label>Item Title</Form.Label>
-            <Form.Control type="text" placeholder="Item Title"></Form.Control>
-          </Modal.Title>
+          <Modal.Title>Add new Item</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
+            <Form.Label>Item Title</Form.Label>
+            <Form.Control
+              type="text"
+              name="itemName"
+              placeholder="Title"
+              value={newItem.itemName}
+              onChange={handleNewItemChange}
+              isInvalid={!!errors.itemName}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.itemName}
+            </Form.Control.Feedback>
+
             <Form.Label>Item Description</Form.Label>
-            <Form.Control type="text"></Form.Control>
+            <Form.Control
+              type="text"
+              name="itemDesc"
+              placeholder="Description"
+              value={newItem.itemDesc}
+              onChange={handleNewItemChange}
+              isInvalid={!!errors.itemDesc}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.itemDesc}
+            </Form.Control.Feedback>
+
             <Form.Label>Item Price</Form.Label>
-            <Form.Control type="number"></Form.Control>
+            <Form.Control
+              type="number"
+              name="itemPrice"
+              placeholder="Price"
+              value={newItem.itemPrice}
+              onChange={handleNewItemChange}
+              isInvalid={!!errors.itemPrice}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.itemPrice}
+            </Form.Control.Feedback>
+
             <Form.Label>Item Quantity</Form.Label>
-            <Form.Control type="number"></Form.Control>
+            <Form.Control
+              type="number"
+              name="itemQTY"
+              placeholder="Quantity"
+              value={newItem.itemQTY}
+              onChange={handleNewItemChange}
+              isInvalid={!!errors.itemQTY}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.itemQTY}
+            </Form.Control.Feedback>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button variant="success">Save changes</Button>
+          <Button variant="success" onClick={() => setShowAddItemConfirm(true)}>
+            Save changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ADD ITEM CONFIRMATION POP UP */}
+      <Modal
+        show={showAddItemConfirm}
+        onHide={() => setShowAddItemConfirm(false)}
+        centered
+      >
+        <Modal.Header>
+          <Modal.Title>Confirm New Item</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to add "{newItem.itemName}"?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowAddItemConfirm(false)}
+          >
+            Cancel
+          </Button>
+          <Button variant="success" onClick={handleAddNewItem}>
+            Confirm Add
+          </Button>
         </Modal.Footer>
       </Modal>
 
