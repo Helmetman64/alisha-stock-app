@@ -1,12 +1,17 @@
-* {
-    box-sizing: border-box;
-}
-
 .body {
-    display: flex;
-    flex-direction: row; 
-}
-
-.container {
-    flex-direction: row;  
-}
+    padding: 20px;
+  }
+  
+  .card {
+    margin-bottom: 20px;
+  }
+    
+  .bold-label {
+    font-weight: bold;
+  }
+  
+  .normal-value {
+    font-weight: normal;
+  }
+  
+  

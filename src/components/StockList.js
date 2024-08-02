@@ -34,29 +34,37 @@ const StockList = () => {
       <h1>Stock</h1>
       <div className="body">
         <Row>
-          {items && (
-            <div className="container">
-              {items.map((item) => (
-                <Col xs={12} sm={6} md={6} lg={4} xl={3}>
-                  <Card style={{ width: "20rem" }}>
-                    <Card.Body>
-                      <div>
-                        <Card.Title>{item.itemName}</Card.Title>
-                        <Card.Subtitle className="mb-2 text-muted">
-                          {item.itemDesc}
-                        </Card.Subtitle>
-                        <Card.Text>
-                          Stock Level: {item.itemQTY}
-                          <span> Price: ${item.itemPrice}</span>
-                        </Card.Text>
-                        <Card.Text></Card.Text>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </div>
-          )}
+          {items &&
+            items.map((item) => (
+              <Col
+                key={item.id}
+                xs={12}
+                sm={6}
+                md={6}
+                lg={4}
+                xl={3}
+                className="mb-4"
+              >
+                <Card style={{ width: "100%" }}>
+                  <Card.Body>
+                    <Card.Title>{item.itemName}</Card.Title>
+                    <Card.Subtitle className="mb-2 text-muted">
+                      {item.itemDesc}
+                    </Card.Subtitle>
+                    <Card.Text className="d-flex justify-content-between">
+                      <span className="bold-label">
+                        Stock Level:{" "}
+                        <span className="normal-value">{item.itemQTY}</span>
+                      </span>
+                      <span className="bold-label">
+                        Price:{" "}
+                        <span className="normal-value">${item.itemPrice}</span>
+                      </span>
+                    </Card.Text>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
         </Row>
       </div>
     </Container>
