@@ -14,4 +14,67 @@
     font-weight: normal;
   }
   
+  .clickable-card {
+    cursor: pointer;
+  }
+
+  .stock-quantity {
+    display: flex; /* Use Flexbox for layout */
+    align-items: center; /* Center items vertically */
+  }
+  
+  .stock-quantity > * {
+    margin: 0 5px; /* Add some spacing between elements */
+  }
+
+  .stock-quantity .stock-qty {
+    width: 100px; /* Adjust width as needed */
+    height: 30px; /* Adjust height as needed */
+  }
+  
+
+/* Increase specificity by adding more selectors */
+button.stock-qty-btn {
+  width: 40px; /* Set width */
+  height: 40px; /* Set height */
+  padding-bottom: 11px;
+  border-radius: 50%; /* Make button circular */
+  background-color: black; /* Set background color */
+  color: white; /* Set text color */
+  border: none; /* Remove border */
+  display: flex; /* Flexbox for centering text */
+  align-items: center; /* Center text vertically */
+  justify-content: center; /* Center text horizontally */
+  font-size: 25px; /* Set font size */
+  font-weight: bold; /* Make text bold */
+  transition: background-color 0.3s; /* Smooth background color transition */
+}
+
+button.stock-qty-btn:hover {
+  background-color: gray; /* Darker background on hover */
+}
+
+/* Add this to your styles.css */
+.clickable-icon {
+  cursor: pointer;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.stock-qty-btn {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-body p {
+  margin: 0;
+}
+
+
+  
   
