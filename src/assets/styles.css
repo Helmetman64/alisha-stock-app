@@ -84,6 +84,22 @@ button.stock-qty-btn:hover {
   margin-left: auto; /* Pushes the save changes button to the right */
 }
 
+.full-container {
+  display: flex;
+}
+
+.side-cart {
+  width: 20%;
+  /* background-color: red; */
+  height: 100%;
+  border: solid 1px black;
+}
+
+.home {
+  /* background-color: yellow; */
+  width: 100%;
+}
+
 
 
   

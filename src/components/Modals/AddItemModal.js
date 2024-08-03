@@ -55,10 +55,10 @@ const AddItemModal = ({
               placeholder="Price"
               value={newItem.itemPrice}
               onChange={handleNewItemChange}
-              min="0"
+              min="1"
             />
             <Form.Control.Feedback type="invalid">
-              Please enter a price.
+              Price must be greater than 0.
             </Form.Control.Feedback>
           </Form.Group>
 
@@ -71,10 +71,10 @@ const AddItemModal = ({
               placeholder="Quantity"
               value={newItem.itemQTY}
               onChange={handleNewItemChange}
-              min="0"
+              min="1"
             />
             <Form.Control.Feedback type="invalid">
-              Please enter a quantity.
+              Quantity must be greater than 0.
             </Form.Control.Feedback>
           </Form.Group>
         </Modal.Body>

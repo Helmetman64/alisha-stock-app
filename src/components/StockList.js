@@ -1,9 +1,10 @@
-import Card from "react-bootstrap/Card";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Container from "react-bootstrap/Container";
 import React, { useEffect, useState } from "react";
 import supabase from "../services/supabaseClient";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import Card from "react-bootstrap/Card";
+import StockCards from "./StockCards";
 import AddItemModal from "./Modals/AddItemModal";
 import ConfirmAddModal from "./Modals/ConfirmAddModal";
 import DeleteItemModal from "./Modals/DeleteItemModal";
@@ -13,7 +14,7 @@ import "../assets/styles.css";
 
 const StockList = () => {
   const [fetchError, setFetchError] = useState(null);
-  const [items, setItems] = useState(null);
+  const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showAddItemPopup, setShowAddItemPopup] = useState(false);
@@ -33,81 +34,32 @@ const StockList = () => {
     setShowEditPopup(true);
   };
 
+  useEffect(() => {
+    const fetchItems = async () => {
+      const { data, error } = await supabase.from("Item").select("*");
+
+      if (error) {
+        setFetchError("Could not fetch the items");
+        setItems([]);
+      } else {
+        setItems(data);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
   const handleClose = () => {
     setShowEditPopup(false);
     setShowAddItemPopup(false);
     setShowAddItemConfirm(false);
     setShowDeletePopup(false);
-  };
-
-  const fetchItems = async () => {
-    const { data, error } = await supabase.from("Item").select();
-
-    if (error) {
-      setFetchError("Could not fetch the stock list");
-      setItems(null);
-    }
-
-    if (data) {
-      setItems(data);
-      setFetchError(null);
-    }
-  };
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setSelectedItem((prevItem) => ({
-      ...prevItem,
-      [name]:
-        name === "itemPrice" || name === "itemQTY"
-          ? Math.max(0, Number(value))
-          : value,
-    }));
-  };
-
-  const handleNewItemChange = (e) => {
-    const { name, value } = e.target;
-    setNewItem((prevItem) => ({
-      ...prevItem,
-      [name]:
-        name === "itemPrice" || name === "itemQTY"
-          ? Math.max(0, Number(value))
-          : value,
-    }));
-  };
-
-  const handleEditClick = (field) => {
-    setIsEditing(field);
-  };
-
-  const handleSaveChanges = async () => {
-    const { data, error } = await supabase
-      .from("stock")
-      .update({
-        itemName: selectedItem.itemName,
-        itemDesc: selectedItem.itemDesc,
-        itemPrice: selectedItem.itemPrice,
-        itemQTY: selectedItem.itemQTY,
-      })
-      .eq("id", selectedItem.id)
-      .select();
-
-    if (error) {
-      console.log(error);
-    }
-
-    if (data) {
-      setItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === selectedItem.id ? selectedItem : item
-        )
-      );
-    }
-    handleClose();
+    setNewItem({
+      itemName: "",
+      itemDesc: "",
+      itemPrice: "",
+      itemQTY: "",
+    });
   };
 
   const handleSubmit = (event) => {
@@ -123,127 +75,54 @@ const StockList = () => {
 
   const addNewItem = async () => {
     const { data, error } = await supabase
-      .from("stock")
-      .insert([
-        {
-          itemName: newItem.itemName,
-          itemDesc: newItem.itemDesc,
-          itemPrice: newItem.itemPrice,
-          itemQTY: newItem.itemQTY,
-        },
-      ])
+      .from("Item")
+      .insert([newItem])
       .select();
 
     if (error) {
       console.log(error);
-    }
-
-    if (data) {
+    } else {
       setItems([...items, ...data]);
     }
 
     handleClose();
   };
 
-  const handleDeleteButton = () => {
-    setShowDeletePopup(true);
-  };
-
   const handleDeleteItem = async () => {
     const { error } = await supabase
-      .from("stock")
+      .from("Item")
       .delete()
-      .eq("id", selectedItem.id);
+      .eq("itemID", selectedItem.itemID);
 
     if (error) {
       console.log(error);
+    } else {
+      setItems(items.filter((item) => item.itemID !== selectedItem.itemID));
     }
 
-    setItems(items.filter((item) => item.id !== selectedItem.id));
     handleClose();
   };
 
-  const incrementQuantity = () => {
-    setSelectedItem((prevItem) => ({
-      ...prevItem,
-      itemQTY: Math.max(0, Number(prevItem.itemQTY) + 1),
-    }));
-  };
-
-  const decrementQuantity = () => {
-    setSelectedItem((prevItem) => ({
-      ...prevItem,
-      itemQTY: Math.max(0, Number(prevItem.itemQTY) - 1),
-    }));
-  };
-
-  const handleQuantityChange = (e) => {
-    const { value } = e.target;
-    setSelectedItem((prevItem) => ({
-      ...prevItem,
-      itemQTY: Math.max(0, Number(value)),
-    }));
-  };
-
   return (
-    <>
-      <Container fluid>
-        <h1>Stock</h1>
-        <div className="body">
-          <Row>
-            <Col xs={12} sm={6} md={6} lg={4} xl={3} className="mb-4">
-              <Card
-                style={{ width: "100%" }}
-                className="clickable-card"
-                onClick={() => setShowAddItemPopup(true)}
-              >
-                <Card.Body>
-                  <Card.Title>Add New Item</Card.Title>
-                  <Card.Text>Click here to add a new item.</Card.Text>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            {items &&
-              items.map((item) => (
-                <Col
-                  key={item.id}
-                  xs={12}
-                  sm={6}
-                  md={6}
-                  lg={4}
-                  xl={3}
-                  className="mb-4"
-                >
-                  <Card
-                    style={{ width: "100%" }}
-                    className="clickable-card"
-                    onClick={() => handleShowEditPopup(item)}
-                  >
-                    <Card.Body>
-                      <Card.Title>{item.itemName}</Card.Title>
-                      <Card.Subtitle className="mb-2 text-muted">
-                        {item.itemDesc}
-                      </Card.Subtitle>
-                      <Card.Text className="d-flex justify-content-between">
-                        <span className="bold-label">
-                          Stock Level:{" "}
-                          <span className="normal-value">{item.itemQTY}</span>
-                        </span>
-                        <span className="bold-label">
-                          Price:{" "}
-                          <span className="normal-value">
-                            ${item.itemPrice}
-                          </span>
-                        </span>
-                      </Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-          </Row>
-        </div>
-      </Container>
+    <Container fluid>
+      <h1>Stock</h1>
+      <div className="body">
+        <Row>
+          <Col xs={12} sm={6} md={6} lg={4} xl={3} className="mb-4">
+            <Card
+              style={{ width: "100%" }}
+              className="clickable-card"
+              onClick={() => setShowAddItemPopup(true)}
+            >
+              <Card.Body>
+                <Card.Title>Add New Item</Card.Title>
+                <Card.Text>Click here to add a new item.</Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+        <StockCards items={items} onCardClick={handleShowEditPopup} />
+      </div>
 
       <AddItemModal
         show={showAddItemPopup}
@@ -251,7 +130,9 @@ const StockList = () => {
         handleSubmit={handleSubmit}
         validated={validated}
         newItem={newItem}
-        handleNewItemChange={handleNewItemChange}
+        handleNewItemChange={(e) =>
+          setNewItem({ ...newItem, [e.target.name]: e.target.value })
+        }
       />
       <ConfirmAddModal
         show={showAddItemConfirm}
@@ -270,13 +151,40 @@ const StockList = () => {
         handleClose={handleClose}
         selectedItem={selectedItem}
         isEditing={isEditing}
-        handleEditClick={handleEditClick}
-        handleInputChange={handleInputChange}
-        incrementQuantity={incrementQuantity}
-        decrementQuantity={decrementQuantity}
-        handleQuantityChange={handleQuantityChange}
-        handleSaveChanges={handleSaveChanges}
-        handleDeleteButton={handleDeleteButton}
+        handleEditClick={setIsEditing}
+        handleInputChange={(e) =>
+          setSelectedItem({ ...selectedItem, [e.target.name]: e.target.value })
+        }
+        incrementQuantity={() =>
+          setSelectedItem({
+            ...selectedItem,
+            itemQTY: selectedItem.itemQTY + 1,
+          })
+        }
+        decrementQuantity={() =>
+          setSelectedItem({
+            ...selectedItem,
+            itemQTY: selectedItem.itemQTY - 1,
+          })
+        }
+        handleSaveChanges={async () => {
+          const { data, error } = await supabase
+            .from("Item")
+            .update(selectedItem)
+            .eq("itemID", selectedItem.itemID);
+
+          if (error) {
+            console.log(error);
+          } else {
+            setItems((prevItems) =>
+              prevItems.map((item) =>
+                item.itemID === selectedItem.itemID ? selectedItem : item
+              )
+            );
+            handleClose();
+          }
+        }}
+        handleDeleteButton={() => setShowDeletePopup(true)}
       />
       <ConfirmDeleteModal
         show={showDeletePopup}
@@ -284,7 +192,7 @@ const StockList = () => {
         handleDeleteItem={handleDeleteItem}
         selectedItem={selectedItem}
       />
-    </>
+    </Container>
   );
 };
 
