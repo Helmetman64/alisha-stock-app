@@ -54,7 +54,6 @@ button.stock-qty-btn:hover {
   background-color: gray; /* Darker background on hover */
 }
 
-/* Add this to your styles.css */
 .clickable-icon {
   cursor: pointer;
   margin-left: 8px;
@@ -72,7 +71,6 @@ button.stock-qty-btn:hover {
 }
 
 
-/* Add this to your styles.css */
 .modal-footer {
   display: flex;
   justify-content: space-between;

@@ -35,7 +35,7 @@ const Menu = () => {
               </Link>
             </li>
             <li className={styles.navItem}>
-              <Link to="/stock-list" onClick={closeMenu}>
+              <Link to="/stock" onClick={closeMenu}>
                 Stock
               </Link>
             </li>
