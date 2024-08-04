@@ -88,6 +88,13 @@ button.stock-qty-btn:hover {
 
 .full-container {
   display: flex;
+  padding: 5px;
+  overflow: hidden;
+}
+
+.home {
+  width: fit-content;
+  max-width: 100%;
 }
 
 .side-cart {
@@ -105,7 +112,6 @@ button.stock-qty-btn:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%; /* Full height when empty */
 }
 
 .side-cart > div {
@@ -116,17 +122,6 @@ button.stock-qty-btn:hover {
 .total-section {
   width: 100%; /* Take full width to align left */
   text-align: left; /* Align text to the left */
-}
-
-.home {
-  width: fit-content;
-  overflow: hidden;
-}
-
-@media only screen and (max-width: 1180px) {
-  .side-cart {
-    width: 40%;
-  }
 }
 
 .cart-item-title {
@@ -143,11 +138,12 @@ text-align: right;
 }
 
 
+@media only screen and (max-width: 1180px) {
+  .side-cart {
+    width: 40%;
+  }
 
-
-
-
-
-
-  
-  
+  .full-container {
+    width: fit-content;
+  }
+}

@@ -1,5 +1,6 @@
 /* BASIC SETUP */
 .pageWrapper {
+  padding: 5px;
   width: 100%;
   height: auto;
 }
