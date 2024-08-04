@@ -14,6 +14,32 @@ const EditItemModal = ({
   handleSaveChanges,
   handleDeleteButton,
 }) => {
+  // Helper function to validate non-negative values
+  const validatePositiveNumber = (value) => {
+    return Math.max(0, value);
+  };
+
+  // Updated handleInputChange to handle non-negative price values
+  const handleInputChangeWithValidation = (e) => {
+    const { name, value } = e.target;
+    if (name === "itemPrice") {
+      // Ensure price is non-negative
+      handleInputChange({
+        target: { name, value: validatePositiveNumber(parseFloat(value)) },
+      });
+    } else {
+      handleInputChange(e);
+    }
+  };
+
+  // Updated handleQuantityChange to ensure quantity is non-negative
+  const handleQuantityChangeWithValidation = (e) => {
+    const { value } = e.target;
+    if (typeof handleQuantityChange === "function") {
+      handleQuantityChange(validatePositiveNumber(parseInt(value, 10)));
+    }
+  };
+
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
@@ -70,7 +96,7 @@ const EditItemModal = ({
                 type="number"
                 name="itemPrice"
                 value={selectedItem.itemPrice}
-                onChange={handleInputChange}
+                onChange={handleInputChangeWithValidation}
                 onBlur={() => handleEditClick(null)}
                 min="0"
               />
@@ -90,7 +116,7 @@ const EditItemModal = ({
             )}
             <div className="stock-quantity">
               <h5>Quantity:</h5>
-              <Button className="stock-qty-btn" onClick={incrementQuantity}>
+              <Button className="qty-btn" onClick={() => incrementQuantity()}>
                 +
               </Button>
               <Form>
@@ -98,11 +124,11 @@ const EditItemModal = ({
                   type="number"
                   value={selectedItem.itemQTY}
                   className="stock-qty"
-                  onChange={handleQuantityChange}
+                  onChange={handleQuantityChangeWithValidation}
                   min="0"
                 />
               </Form>
-              <Button className="stock-qty-btn" onClick={decrementQuantity}>
+              <Button className="qty-btn" onClick={() => decrementQuantity()}>
                 -
               </Button>
             </div>

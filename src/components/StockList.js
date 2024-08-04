@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import supabase from "../services/supabaseClient";
 import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
 import StockCards from "./StockCards";
 import AddItemModal from "./Modals/AddItemModal";
 import ConfirmAddModal from "./Modals/ConfirmAddModal";
@@ -103,25 +100,25 @@ const StockList = () => {
     handleClose();
   };
 
+  const itemsWithAddNewItemCard = [
+    {
+      itemID: "add-new-item",
+      itemName: "Add New Item",
+      itemDesc: "Click here to add a new item.",
+      isAddNewItemCard: true,
+    },
+    ...items,
+  ];
+
   return (
     <Container fluid>
       <h1>Stock</h1>
       <div className="body">
-        <Row>
-          <Col xs={12} sm={6} md={6} lg={4} xl={3} className="mb-4">
-            <Card
-              style={{ width: "100%" }}
-              className="clickable-card"
-              onClick={() => setShowAddItemPopup(true)}
-            >
-              <Card.Body>
-                <Card.Title>Add New Item</Card.Title>
-                <Card.Text>Click here to add a new item.</Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-        <StockCards items={items} onCardClick={handleShowEditPopup} />
+        <StockCards
+          items={itemsWithAddNewItemCard}
+          onCardClick={handleShowEditPopup}
+          onAddNewItemClick={() => setShowAddItemPopup(true)}
+        />
       </div>
 
       <AddItemModal

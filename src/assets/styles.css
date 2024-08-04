@@ -3,6 +3,7 @@
   }
   
   .card {
+    width: 50px;
     margin-bottom: 20px;
   }
     
@@ -15,6 +16,7 @@
   }
   
   .clickable-card {
+    width: 80px;
     cursor: pointer;
   }
 
@@ -28,15 +30,15 @@
   }
 
   .stock-quantity .stock-qty {
-    width: 100px; /* Adjust width as needed */
+    width: 50px; /* Adjust width as needed */
     height: 30px; /* Adjust height as needed */
   }
   
 
 /* Increase specificity by adding more selectors */
-button.stock-qty-btn {
-  width: 40px; /* Set width */
-  height: 40px; /* Set height */
+button.qty-btn {
+  width: 30px; /* Set width */
+  height: 30px; /* Set height */
   padding-bottom: 11px;
   border-radius: 50%; /* Make button circular */
   background-color: black; /* Set background color */
@@ -90,15 +92,60 @@ button.stock-qty-btn:hover {
 
 .side-cart {
   width: 20%;
-  /* background-color: red; */
-  height: 100%;
+  min-height: 100%;
   border: solid 1px black;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the children horizontally */
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.side-cart.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%; /* Full height when empty */
+}
+
+.side-cart > div {
+  width: 90%; /* Adjust width to match the card's width in the component */
+  margin-bottom: 10px; /* Add some space between cards */
+}
+
+.total-section {
+  width: 100%; /* Take full width to align left */
+  text-align: left; /* Align text to the left */
 }
 
 .home {
-  /* background-color: yellow; */
-  width: 100%;
+  width: fit-content;
+  overflow: hidden;
 }
+
+@media only screen and (max-width: 1180px) {
+  .side-cart {
+    width: 40%;
+  }
+}
+
+.cart-item-title {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cart-item-qty {
+  width: 30%;
+}
+
+.total-section {
+text-align: right;
+}
+
+
+
+
+
 
 
 
