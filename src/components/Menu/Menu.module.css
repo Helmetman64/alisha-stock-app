@@ -55,6 +55,12 @@
   height: 100%; /* Ensure the item takes up full height on hover */
 }
 
+.activeNavItem a {
+  background-color: #eae8e8; /* Change to your desired background color */
+  color: #63bcf7; /* Optional: Change text color for active item */
+}
+
+
 /* MOBILE MENU & ANIMATION */
 .menuToggle .bar {
   width: 25px;

@@ -112,15 +112,11 @@ const StockList = () => {
 
   return (
     <Container fluid>
-      <h1>Stock</h1>
-      <div className="body">
-        <StockCards
-          items={itemsWithAddNewItemCard}
-          onCardClick={handleShowEditPopup}
-          onAddNewItemClick={() => setShowAddItemPopup(true)}
-        />
-      </div>
-
+      <StockCards
+        items={itemsWithAddNewItemCard}
+        onCardClick={handleShowEditPopup}
+        onAddNewItemClick={() => setShowAddItemPopup(true)}
+      />
       <AddItemModal
         show={showAddItemPopup}
         handleClose={handleClose}

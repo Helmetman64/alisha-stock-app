@@ -1,38 +1,36 @@
-.body {
-    padding: 20px;
-  }
-  
-  .card {
+/* Styling for the stock cards */
+ 
+.card {
     width: 50px;
     margin-bottom: 20px;
-  }
+}
     
-  .bold-label {
+.bold-label {
     font-weight: bold;
-  }
+}
   
-  .normal-value {
+.normal-value {
     font-weight: normal;
-  }
+}
   
-  .clickable-card {
+.clickable-card {
     width: 80px;
     cursor: pointer;
-  }
+}
 
-  .stock-quantity {
+.stock-quantity {
     display: flex; /* Use Flexbox for layout */
     align-items: center; /* Center items vertically */
-  }
+}
   
-  .stock-quantity > * {
+.stock-quantity > * {
     margin: 0 5px; /* Add some spacing between elements */
-  }
+}
 
-  .stock-quantity .stock-qty {
+.stock-quantity .stock-qty {
     width: 50px; /* Adjust width as needed */
     height: 30px; /* Adjust height as needed */
-  }
+}
   
 
 /* Increase specificity by adding more selectors */
@@ -72,6 +70,7 @@ button.stock-qty-btn:hover {
   justify-content: center;
 }
 
+/* Styling for the popup modals */
 
 .modal-footer {
   display: flex;
@@ -85,6 +84,8 @@ button.stock-qty-btn:hover {
 .modal-footer .btn-success {
   margin-left: auto; /* Pushes the save changes button to the right */
 }
+
+/* Styling for the home page */
 
 .full-container {
   display: flex;

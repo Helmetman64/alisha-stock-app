@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useLocation, Link } from "react-router-dom";
 import styles from "./Menu.module.css"; // Ensure this path is correct
-import { Link } from "react-router-dom";
 
 const Menu = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -11,6 +12,10 @@ const Menu = () => {
 
   const closeMenu = () => {
     setIsOpen(false);
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path ? styles.activeNavItem : "";
   };
 
   return (
@@ -29,22 +34,22 @@ const Menu = () => {
             <span className={styles.bar}></span>
           </div>
           <ul className={`${styles.nav} ${isOpen ? styles.mobileNav : ""}`}>
-            <li className={styles.navItem}>
+            <li className={`${styles.navItem} ${isActive("/")}`}>
               <Link to="/" onClick={closeMenu}>
                 Home
               </Link>
             </li>
-            <li className={styles.navItem}>
+            <li className={`${styles.navItem} ${isActive("/stock")}`}>
               <Link to="/stock" onClick={closeMenu}>
                 Stock
               </Link>
             </li>
-            <li className={styles.navItem}>
+            <li className={`${styles.navItem} ${isActive("/history")}`}>
               <Link to="/history" onClick={closeMenu}>
                 History
               </Link>
             </li>
-            <li className={styles.navItem}>
+            <li className={`${styles.navItem} ${isActive("/dashboard")}`}>
               <Link to="/dashboard" onClick={closeMenu}>
                 Dashboard
               </Link>
