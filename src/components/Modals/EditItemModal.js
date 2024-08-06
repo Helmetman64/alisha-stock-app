@@ -4,10 +4,12 @@ import { Modal, Button, Form } from "react-bootstrap";
 const EditItemModal = ({
   show,
   handleClose,
+  handleEditSubmit,
+  validated,
   selectedItem,
+  handleInputChange,
   isEditing,
   handleEditClick,
-  handleInputChange,
   incrementQuantity,
   decrementQuantity,
   handleQuantityChange,
@@ -20,85 +22,90 @@ const EditItemModal = ({
     }
   };
 
+  if (!selectedItem) {
+    return null; // Return null if selectedItem is null
+  }
+
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>Edit Item</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        {selectedItem ? (
-          <>
-            {isEditing === "description" ? (
-              <Form.Control
-                as="textarea"
-                name="itemDesc"
-                value={selectedItem.itemDesc}
-                onChange={handleInputChange}
-                onBlur={() => handleEditClick(null)}
-              />
-            ) : (
-              <>
-                <p>
-                  {selectedItem.itemDesc}{" "}
-                  <i
-                    className="bi bi-pencil-square clickable-icon"
-                    onClick={() => handleEditClick("description")}
-                  ></i>
-                </p>
-              </>
-            )}
-            {isEditing === "price" ? (
-              <Form.Control
-                type="number"
-                name="itemPrice"
-                value={selectedItem.itemPrice}
-                onChange={handleInputChange}
-                min="0"
-              />
-            ) : (
-              <>
-                <span className="bold-label">
-                  Price:{" "}
-                  <span className="normal-value">
-                    ${selectedItem.itemPrice}{" "}
-                  </span>
-                  <i
-                    className="bi bi-pencil-square clickable-icon"
-                    onClick={() => handleEditClick("price")}
-                  ></i>
-                </span>
-              </>
-            )}
-            <div className="stock-quantity">
-              <h5>Quantity:</h5>
-              <Button className="qty-btn" onClick={() => incrementQuantity()}>
-                +
-              </Button>
-              <Form.Control
-                type="number"
-                name="itemQTY"
-                value={selectedItem.itemQTY}
-                className="stock-qty"
-                onChange={handleInputChange}
-                min="0"
-              />
-              <Button className="qty-btn" onClick={() => decrementQuantity()}>
-                -
-              </Button>
-            </div>
-          </>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="danger" onClick={handleDeleteButton}>
-          Delete
-        </Button>
-        <Button variant="success" onClick={handleSaveChanges}>
-          Save Changes
-        </Button>
-      </Modal.Footer>
+      <Form noValidate validated={validated} onSubmit={handleEditSubmit}>
+        <Modal.Body>
+          <Form.Group controlId="formItemName">
+            <Form.Label>Item Title</Form.Label>
+            <Form.Control
+              required
+              type="text"
+              name="itemName"
+              placeholder="Title"
+              value={selectedItem.itemName}
+              onChange={handleInputChange}
+            />
+            <Form.Control.Feedback type="invalid">
+              Please enter a name.
+            </Form.Control.Feedback>
+          </Form.Group>
+
+          <Form.Group controlId="formItemDesc">
+            <Form.Label>Item Description</Form.Label>
+            <Form.Control
+              required
+              type="text"
+              name="itemDesc"
+              placeholder="Description"
+              value={selectedItem.itemDesc}
+              onChange={handleInputChange}
+            />
+            <Form.Control.Feedback type="invalid">
+              Please enter a description.
+            </Form.Control.Feedback>
+          </Form.Group>
+
+          <Form.Group controlId="formItemPrice">
+            <Form.Label>Item Price</Form.Label>
+            <Form.Control
+              required
+              type="number"
+              name="itemPrice"
+              placeholder="Price"
+              value={selectedItem.itemPrice}
+              onChange={handleInputChange}
+              onKeyDown={preventMinus}
+              min="1"
+            />
+            <Form.Control.Feedback type="invalid">
+              Price must be greater than 0.
+            </Form.Control.Feedback>
+          </Form.Group>
+
+          <Form.Group controlId="formItemQTY">
+            <Form.Label>Item Quantity</Form.Label>
+            <Form.Control
+              required
+              type="number"
+              name="itemQTY"
+              placeholder="Quantity"
+              value={selectedItem.itemQTY}
+              onChange={handleInputChange}
+              onKeyDown={preventMinus}
+              min="1"
+            />
+            <Form.Control.Feedback type="invalid">
+              Quantity must be greater than 0.
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="danger" onClick={handleDeleteButton}>
+            Delete
+          </Button>
+          <Button variant="success" type="submit">
+            Save changes
+          </Button>
+        </Modal.Footer>
+      </Form>
     </Modal>
   );
 };

@@ -72,6 +72,17 @@ const StockList = () => {
     setValidated(true);
   };
 
+  const handleEditSubmit = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+    } else {
+      setShowEditPopupConfirm(true);
+    }
+    setValidated(true);
+  };
+
   const addNewItem = async () => {
     const { data, error } = await supabase
       .from("Item")
@@ -186,8 +197,9 @@ const StockList = () => {
       <EditItemModal
         show={showEditPopup}
         handleClose={handleClose}
+        handleEditSubmit={handleEditSubmit}
+        validated={validated}
         selectedItem={selectedItem}
-        isEditing={isEditing}
         handleEditClick={setIsEditing}
         handleInputChange={handleInputChange}
         incrementQuantity={incrementQuantity}
