@@ -5,10 +5,12 @@ import StockCards from "./StockCards";
 import EditableQuantity from "./Side-Cart/EditableQty";
 import { Button } from "react-bootstrap";
 import ConfirmSellModal from "./Modals/ConfirmSellModal";
+import SoldModal from "./Modals/SoldModal";
 
 export default function Home() {
   const [fetchError, setFetchError] = useState(null);
   const [showSellItemPopup, setShowSellItemPopup] = useState(false);
+  const [showSoldPopup, setShowSoldPopup] = useState(false);
   const [items, setItems] = useState([]);
   const [clickedCards, setClickedCards] = useState({});
   const [showTotal, setShowTotal] = useState(false);
@@ -30,6 +32,7 @@ export default function Home() {
 
   const handleClose = () => {
     setShowSellItemPopup(false);
+    setShowSoldPopup(false);
   };
 
   const handleCardClick = useCallback((item) => {
@@ -116,6 +119,63 @@ export default function Home() {
     };
   });
 
+  const handleConfirmSale = async () => {
+    const saleDate = new Date().toISOString();
+    let totalAmount = 0;
+
+    cartItems.forEach((item) => {
+      totalAmount += item.itemPrice * item.count;
+    });
+
+    // Insert into Sales table
+    const { data: saleData, error: saleError } = await supabase
+      .from("Sales")
+      .insert([{ saleDate, totalAmount }])
+      .select();
+
+    if (saleError) {
+      console.error("Error inserting sale:", saleError);
+      return;
+    }
+
+    const saleID = saleData[0].saleID;
+
+    // Insert into SaleItems table
+    const saleItemsData = cartItems.map((item) => ({
+      saleID,
+      itemID: item.itemID,
+      itemName: item.itemName,
+      salePrice: item.itemPrice,
+      qtySold: item.count,
+    }));
+
+    const { error: saleItemsError } = await supabase
+      .from("SaleItems")
+      .insert(saleItemsData);
+
+    if (saleItemsError) {
+      console.error("Error inserting sale items:", saleItemsError);
+      return;
+    }
+
+    // Log sale information to console
+    let logMessage = `Sale Date: ${saleDate}\nItems Sold:\n`;
+    cartItems.forEach((item) => {
+      const total = item.itemPrice * item.count;
+      logMessage += `Item: ${item.itemName}, Qty: ${
+        item.count
+      }, Unit Price: $${item.itemPrice.toFixed(2)}, Total: $${total.toFixed(
+        2
+      )}\n`;
+    });
+    logMessage += `Overall Total: $${totalAmount.toFixed(2)}`;
+    console.log(logMessage);
+
+    setShowSellItemPopup(false);
+    setShowSoldPopup(true);
+    // Reset cartItems or update UI accordingly
+  };
+
   return (
     <div className="full-container">
       <div
@@ -190,8 +250,10 @@ export default function Home() {
         incrementQuantity={handleIncrementQuantity}
         decrementQuantity={handleDecrementQuantity}
         handleQuantityChange={handleQuantityChange}
+        handleConfirmSale={handleConfirmSale}
         deleteItem={handleRemoveItem}
       />
+      <SoldModal show={showSoldPopup} handleClose={handleClose} />
     </div>
   );
 }

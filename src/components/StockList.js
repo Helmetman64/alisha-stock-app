@@ -24,7 +24,7 @@ const StockList = () => {
     itemPrice: "",
     itemQTY: "",
   });
-  const [isEditing, setIsEditing] = useState(null);
+  // const [isEditing, setIsEditing] = useState(null);
   const [validated, setValidated] = useState(false);
 
   const handleShowEditPopup = (item) => {
@@ -61,13 +61,24 @@ const StockList = () => {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleAddSubmit = (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.stopPropagation();
     } else {
       setShowAddItemConfirm(true);
+    }
+    setValidated(true);
+  };
+
+  const handleEditSubmit = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+    } else {
+      setShowEditPopupConfirm(true);
     }
     setValidated(true);
   };
@@ -107,30 +118,30 @@ const StockList = () => {
     setSelectedItem({ ...selectedItem, [name]: value });
   };
 
-  const incrementQuantity = () => {
-    setSelectedItem((prevState) => ({
-      ...prevState,
-      itemQTY: validatePositiveNumber(prevState.itemQTY + 1),
-    }));
-  };
+  // const incrementQuantity = () => {
+  //   setSelectedItem((prevState) => ({
+  //     ...prevState,
+  //     itemQTY: validatePositiveNumber(prevState.itemQTY + 1),
+  //   }));
+  // };
 
-  const decrementQuantity = () => {
-    setSelectedItem((prevState) => ({
-      ...prevState,
-      itemQTY: validatePositiveNumber(prevState.itemQTY - 1),
-    }));
-  };
+  // const decrementQuantity = () => {
+  //   setSelectedItem((prevState) => ({
+  //     ...prevState,
+  //     itemQTY: validatePositiveNumber(prevState.itemQTY - 1),
+  //   }));
+  // };
 
-  const handleQuantityChange = (value) => {
-    setSelectedItem((prevState) => ({
-      ...prevState,
-      itemQTY: validatePositiveNumber(value),
-    }));
-  };
+  // const handleQuantityChange = (value) => {
+  //   setSelectedItem((prevState) => ({
+  //     ...prevState,
+  //     itemQTY: validatePositiveNumber(value),
+  //   }));
+  // };
 
-  const validatePositiveNumber = (value) => {
-    return Math.max(1, value);
-  };
+  // const validatePositiveNumber = (value) => {
+  //   return Math.max(1, value);
+  // };
 
   const handleSaveChanges = async () => {
     const { data, error } = await supabase
@@ -170,7 +181,7 @@ const StockList = () => {
       <AddItemModal
         show={showAddItemPopup}
         handleClose={handleClose}
-        handleSubmit={handleSubmit}
+        handleAddSubmit={handleAddSubmit}
         validated={validated}
         newItem={newItem}
         handleNewItemChange={(e) =>
@@ -186,15 +197,16 @@ const StockList = () => {
       <EditItemModal
         show={showEditPopup}
         handleClose={handleClose}
+        handleEditSubmit={handleEditSubmit}
+        validated={validated}
         selectedItem={selectedItem}
-        isEditing={isEditing}
-        handleEditClick={setIsEditing}
         handleInputChange={handleInputChange}
-        incrementQuantity={incrementQuantity}
-        decrementQuantity={decrementQuantity}
-        handleQuantityChange={handleQuantityChange}
-        handleSaveChanges={handleSaveChanges}
         handleDeleteButton={() => setShowDeletePopup(true)}
+        // handleEditClick={setIsEditing}
+        // incrementQuantity={incrementQuantity}
+        // decrementQuantity={decrementQuantity}
+        // handleQuantityChange={handleQuantityChange}
+        // handleSaveChanges={handleSaveChanges}
       />
       <ConfirmEditModal
         show={showEditPopupConfirm}

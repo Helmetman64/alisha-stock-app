@@ -10,6 +10,7 @@ const ConfirmSellModal = ({
   incrementQuantity,
   decrementQuantity,
   handleQuantityChange,
+  handleConfirmSale,
 }) => {
   if (items.length === 0) {
     handleClose();
@@ -85,7 +86,9 @@ const ConfirmSellModal = ({
         <Button variant="secondary" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="success">Confirm Sale</Button>
+        <Button variant="success" onClick={handleConfirmSale}>
+          Confirm Sale
+        </Button>
       </Modal.Footer>
     </Modal>
   );
