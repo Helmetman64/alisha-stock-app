@@ -240,7 +240,12 @@ export default function Home() {
         )}
       </div>
       <div className="home">
-        <StockCards items={items} onCardClick={handleCardClick} />
+        <StockCards
+          items={items}
+          onCardClick={handleCardClick}
+          disableClick={true}
+          disablePointer={true}
+        />
       </div>
       <ConfirmSellModal
         show={showSellItemPopup}

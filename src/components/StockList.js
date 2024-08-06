@@ -177,6 +177,8 @@ const StockList = () => {
         items={itemsWithAddNewItemCard}
         onCardClick={handleShowEditPopup}
         onAddNewItemClick={() => setShowAddItemPopup(true)}
+        disableClick={false}
+        disablePointer={false}
       />
       <AddItemModal
         show={showAddItemPopup}

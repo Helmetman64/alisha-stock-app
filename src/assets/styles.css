@@ -14,9 +14,9 @@
 }
   
 .clickable-card {
-    width: 80px;
     cursor: pointer;
 }
+
 
 .stock-quantity {
     display: flex; /* Use Flexbox for layout */

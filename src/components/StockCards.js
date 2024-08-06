@@ -3,7 +3,13 @@ import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 
-const StockCards = ({ items, onCardClick, onAddNewItemClick }) => {
+const StockCards = ({
+  items,
+  onCardClick,
+  onAddNewItemClick,
+  disableClick,
+  disablePointer,
+}) => {
   return (
     <Row>
       {items &&
@@ -40,9 +46,18 @@ const StockCards = ({ items, onCardClick, onAddNewItemClick }) => {
               className="mb-4"
             >
               <Card
-                style={{ width: "100%" }}
-                className="clickable-card"
-                onClick={() => onCardClick(item)}
+                style={{
+                  width: "100%",
+                  backgroundColor: item.itemQTY === 0 ? "#dbd9d9" : "inherit",
+                }}
+                className={
+                  item.itemQTY !== 0 || !disablePointer ? "clickable-card" : " "
+                }
+                onClick={
+                  item.itemQTY !== 0 || !disableClick
+                    ? () => onCardClick(item)
+                    : null
+                }
               >
                 <Card.Body>
                   <Card.Title>{item.itemName}</Card.Title>
