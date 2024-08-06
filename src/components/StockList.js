@@ -4,16 +4,17 @@ import Container from "react-bootstrap/Container";
 import StockCards from "./StockCards";
 import AddItemModal from "./Modals/AddItemModal";
 import ConfirmAddModal from "./Modals/ConfirmAddModal";
-import DeleteItemModal from "./Modals/DeleteItemModal";
 import ConfirmDeleteModal from "./Modals/ConfirmDeleteModal";
 import EditItemModal from "./Modals/EditItemModal";
 import "../assets/styles.css";
+import ConfirmEditModal from "./Modals/ConfirmEditModal";
 
 const StockList = () => {
   const [fetchError, setFetchError] = useState(null);
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showEditPopup, setShowEditPopup] = useState(false);
+  const [showEditPopupConfirm, setShowEditPopupConfirm] = useState(false);
   const [showAddItemPopup, setShowAddItemPopup] = useState(false);
   const [showAddItemConfirm, setShowAddItemConfirm] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
@@ -48,6 +49,7 @@ const StockList = () => {
 
   const handleClose = () => {
     setShowEditPopup(false);
+    setShowEditPopupConfirm(false);
     setShowAddItemPopup(false);
     setShowAddItemConfirm(false);
     setShowDeletePopup(false);
@@ -100,6 +102,54 @@ const StockList = () => {
     handleClose();
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedItem({ ...selectedItem, [name]: value });
+  };
+
+  const incrementQuantity = () => {
+    setSelectedItem((prevState) => ({
+      ...prevState,
+      itemQTY: validatePositiveNumber(prevState.itemQTY + 1),
+    }));
+  };
+
+  const decrementQuantity = () => {
+    setSelectedItem((prevState) => ({
+      ...prevState,
+      itemQTY: validatePositiveNumber(prevState.itemQTY - 1),
+    }));
+  };
+
+  const handleQuantityChange = (value) => {
+    setSelectedItem((prevState) => ({
+      ...prevState,
+      itemQTY: validatePositiveNumber(value),
+    }));
+  };
+
+  const validatePositiveNumber = (value) => {
+    return Math.max(1, value);
+  };
+
+  const handleSaveChanges = async () => {
+    const { data, error } = await supabase
+      .from("Item")
+      .update(selectedItem)
+      .eq("itemID", selectedItem.itemID);
+
+    if (error) {
+      console.log(error);
+    } else {
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item.itemID === selectedItem.itemID ? selectedItem : item
+        )
+      );
+      handleClose();
+    }
+  };
+
   const itemsWithAddNewItemCard = [
     {
       itemID: "add-new-item",
@@ -133,51 +183,24 @@ const StockList = () => {
         handleConfirm={addNewItem}
         newItem={newItem}
       />
-      <DeleteItemModal
-        show={showDeletePopup}
-        handleClose={handleClose}
-        handleDelete={handleDeleteItem}
-        selectedItem={selectedItem}
-      />
       <EditItemModal
         show={showEditPopup}
         handleClose={handleClose}
         selectedItem={selectedItem}
         isEditing={isEditing}
         handleEditClick={setIsEditing}
-        handleInputChange={(e) =>
-          setSelectedItem({ ...selectedItem, [e.target.name]: e.target.value })
-        }
-        incrementQuantity={() =>
-          setSelectedItem({
-            ...selectedItem,
-            itemQTY: selectedItem.itemQTY + 1,
-          })
-        }
-        decrementQuantity={() =>
-          setSelectedItem({
-            ...selectedItem,
-            itemQTY: selectedItem.itemQTY - 1,
-          })
-        }
-        handleSaveChanges={async () => {
-          const { data, error } = await supabase
-            .from("Item")
-            .update(selectedItem)
-            .eq("itemID", selectedItem.itemID);
-
-          if (error) {
-            console.log(error);
-          } else {
-            setItems((prevItems) =>
-              prevItems.map((item) =>
-                item.itemID === selectedItem.itemID ? selectedItem : item
-              )
-            );
-            handleClose();
-          }
-        }}
+        handleInputChange={handleInputChange}
+        incrementQuantity={incrementQuantity}
+        decrementQuantity={decrementQuantity}
+        handleQuantityChange={handleQuantityChange}
+        handleSaveChanges={handleSaveChanges}
         handleDeleteButton={() => setShowDeletePopup(true)}
+      />
+      <ConfirmEditModal
+        show={showEditPopupConfirm}
+        handleClose={handleClose}
+        handleSaveChanges={handleSaveChanges}
+        selectedItem={selectedItem}
       />
       <ConfirmDeleteModal
         show={showDeletePopup}

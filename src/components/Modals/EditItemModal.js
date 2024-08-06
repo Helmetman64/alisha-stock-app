@@ -16,27 +16,32 @@ const EditItemModal = ({
 }) => {
   // Helper function to validate non-negative values
   const validatePositiveNumber = (value) => {
-    return Math.max(0, value);
+    if (isNaN(value) || value <= 0) {
+      alert("Please enter a positive number greater than zero.");
+      return 1;
+    }
+    return value;
   };
 
-  // Updated handleInputChange to handle non-negative price values
-  const handleInputChangeWithValidation = (e) => {
-    const { name, value } = e.target;
-    if (name === "itemPrice") {
-      // Ensure price is non-negative
+  // Validation for item price on blur
+  const handlePriceBlur = () => {
+    const price = parseFloat(selectedItem.itemPrice);
+    const validatedPrice = validatePositiveNumber(price);
+    if (!isNaN(validatedPrice)) {
       handleInputChange({
-        target: { name, value: validatePositiveNumber(parseFloat(value)) },
+        target: { name: "itemPrice", value: validatedPrice },
       });
-    } else {
-      handleInputChange(e);
     }
   };
 
-  // Updated handleQuantityChange to ensure quantity is non-negative
-  const handleQuantityChangeWithValidation = (e) => {
-    const { value } = e.target;
-    if (typeof handleQuantityChange === "function") {
-      handleQuantityChange(validatePositiveNumber(parseInt(value, 10)));
+  // Validation for item quantity on blur
+  const handleQuantityBlur = () => {
+    const quantity = parseInt(selectedItem.itemQTY);
+    const validatedQuantity = validatePositiveNumber(quantity);
+    if (!isNaN(validatedQuantity)) {
+      handleInputChange({
+        target: { name: "itemQTY", value: validatedQuantity },
+      });
     }
   };
 
@@ -96,8 +101,8 @@ const EditItemModal = ({
                 type="number"
                 name="itemPrice"
                 value={selectedItem.itemPrice}
-                onChange={handleInputChangeWithValidation}
-                onBlur={() => handleEditClick(null)}
+                onChange={handleInputChange}
+                onBlur={handlePriceBlur}
                 min="0"
               />
             ) : (
@@ -119,15 +124,15 @@ const EditItemModal = ({
               <Button className="qty-btn" onClick={() => incrementQuantity()}>
                 +
               </Button>
-              <Form>
-                <Form.Control
-                  type="number"
-                  value={selectedItem.itemQTY}
-                  className="stock-qty"
-                  onChange={handleQuantityChangeWithValidation}
-                  min="0"
-                />
-              </Form>
+              <Form.Control
+                type="number"
+                name="itemQTY"
+                value={selectedItem.itemQTY}
+                className="stock-qty"
+                onChange={handleInputChange}
+                onBlur={handleQuantityBlur}
+                min="0"
+              />
               <Button className="qty-btn" onClick={() => decrementQuantity()}>
                 -
               </Button>
