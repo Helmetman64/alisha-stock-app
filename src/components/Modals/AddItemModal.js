@@ -4,17 +4,23 @@ import { Modal, Button, Form } from "react-bootstrap";
 const AddItemModal = ({
   show,
   handleClose,
-  handleSubmit,
+  handleAddSubmit,
   validated,
   newItem,
   handleNewItemChange,
 }) => {
+  const preventMinus = (e) => {
+    if (e.code === "Minus") {
+      e.preventDefault();
+    }
+  };
+
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>Add new Item</Modal.Title>
       </Modal.Header>
-      <Form noValidate validated={validated} onSubmit={handleSubmit}>
+      <Form noValidate validated={validated} onSubmit={handleAddSubmit}>
         <Modal.Body>
           <Form.Group controlId="formItemName">
             <Form.Label>Item Title</Form.Label>
@@ -55,6 +61,7 @@ const AddItemModal = ({
               placeholder="Price"
               value={newItem.itemPrice}
               onChange={handleNewItemChange}
+              onKeyDown={preventMinus}
               min="1"
             />
             <Form.Control.Feedback type="invalid">
@@ -71,6 +78,7 @@ const AddItemModal = ({
               placeholder="Quantity"
               value={newItem.itemQTY}
               onChange={handleNewItemChange}
+              onKeyDown={preventMinus}
               min="1"
             />
             <Form.Control.Feedback type="invalid">

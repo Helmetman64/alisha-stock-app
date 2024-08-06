@@ -61,7 +61,7 @@ const StockList = () => {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleAddSubmit = (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
@@ -170,7 +170,7 @@ const StockList = () => {
       <AddItemModal
         show={showAddItemPopup}
         handleClose={handleClose}
-        handleSubmit={handleSubmit}
+        handleAddSubmit={handleAddSubmit}
         validated={validated}
         newItem={newItem}
         handleNewItemChange={(e) =>

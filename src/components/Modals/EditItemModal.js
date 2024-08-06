@@ -14,65 +14,16 @@ const EditItemModal = ({
   handleSaveChanges,
   handleDeleteButton,
 }) => {
-  // Helper function to validate non-negative values
-  const validatePositiveNumber = (value) => {
-    if (isNaN(value) || value <= 0) {
-      alert("Please enter a positive number greater than zero.");
-      return 1;
-    }
-    return value;
-  };
-
-  // Validation for item price on blur
-  const handlePriceBlur = () => {
-    const price = parseFloat(selectedItem.itemPrice);
-    const validatedPrice = validatePositiveNumber(price);
-    if (!isNaN(validatedPrice)) {
-      handleInputChange({
-        target: { name: "itemPrice", value: validatedPrice },
-      });
-    }
-  };
-
-  // Validation for item quantity on blur
-  const handleQuantityBlur = () => {
-    const quantity = parseInt(selectedItem.itemQTY);
-    const validatedQuantity = validatePositiveNumber(quantity);
-    if (!isNaN(validatedQuantity)) {
-      handleInputChange({
-        target: { name: "itemQTY", value: validatedQuantity },
-      });
+  const preventMinus = (e) => {
+    if (e.code === "Minus") {
+      e.preventDefault();
     }
   };
 
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>
-          {selectedItem ? (
-            <>
-              {isEditing === "title" ? (
-                <Form.Control
-                  type="text"
-                  name="itemName"
-                  value={selectedItem.itemName}
-                  onChange={handleInputChange}
-                  onBlur={() => handleEditClick(null)}
-                />
-              ) : (
-                <>
-                  {selectedItem.itemName}{" "}
-                  <i
-                    className="bi bi-pencil-square clickable-icon"
-                    onClick={() => handleEditClick("title")}
-                  ></i>
-                </>
-              )}
-            </>
-          ) : (
-            "Item Details"
-          )}
-        </Modal.Title>
+        <Modal.Title>Edit Item</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {selectedItem ? (
@@ -102,7 +53,6 @@ const EditItemModal = ({
                 name="itemPrice"
                 value={selectedItem.itemPrice}
                 onChange={handleInputChange}
-                onBlur={handlePriceBlur}
                 min="0"
               />
             ) : (
@@ -130,7 +80,6 @@ const EditItemModal = ({
                 value={selectedItem.itemQTY}
                 className="stock-qty"
                 onChange={handleInputChange}
-                onBlur={handleQuantityBlur}
                 min="0"
               />
               <Button className="qty-btn" onClick={() => decrementQuantity()}>
