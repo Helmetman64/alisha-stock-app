@@ -24,7 +24,7 @@ const StockList = () => {
     itemPrice: "",
     itemQTY: "",
   });
-  const [isEditing, setIsEditing] = useState(null);
+  // const [isEditing, setIsEditing] = useState(null);
   const [validated, setValidated] = useState(false);
 
   const handleShowEditPopup = (item) => {
@@ -118,30 +118,30 @@ const StockList = () => {
     setSelectedItem({ ...selectedItem, [name]: value });
   };
 
-  const incrementQuantity = () => {
-    setSelectedItem((prevState) => ({
-      ...prevState,
-      itemQTY: validatePositiveNumber(prevState.itemQTY + 1),
-    }));
-  };
+  // const incrementQuantity = () => {
+  //   setSelectedItem((prevState) => ({
+  //     ...prevState,
+  //     itemQTY: validatePositiveNumber(prevState.itemQTY + 1),
+  //   }));
+  // };
 
-  const decrementQuantity = () => {
-    setSelectedItem((prevState) => ({
-      ...prevState,
-      itemQTY: validatePositiveNumber(prevState.itemQTY - 1),
-    }));
-  };
+  // const decrementQuantity = () => {
+  //   setSelectedItem((prevState) => ({
+  //     ...prevState,
+  //     itemQTY: validatePositiveNumber(prevState.itemQTY - 1),
+  //   }));
+  // };
 
-  const handleQuantityChange = (value) => {
-    setSelectedItem((prevState) => ({
-      ...prevState,
-      itemQTY: validatePositiveNumber(value),
-    }));
-  };
+  // const handleQuantityChange = (value) => {
+  //   setSelectedItem((prevState) => ({
+  //     ...prevState,
+  //     itemQTY: validatePositiveNumber(value),
+  //   }));
+  // };
 
-  const validatePositiveNumber = (value) => {
-    return Math.max(1, value);
-  };
+  // const validatePositiveNumber = (value) => {
+  //   return Math.max(1, value);
+  // };
 
   const handleSaveChanges = async () => {
     const { data, error } = await supabase
@@ -200,13 +200,13 @@ const StockList = () => {
         handleEditSubmit={handleEditSubmit}
         validated={validated}
         selectedItem={selectedItem}
-        handleEditClick={setIsEditing}
         handleInputChange={handleInputChange}
-        incrementQuantity={incrementQuantity}
-        decrementQuantity={decrementQuantity}
-        handleQuantityChange={handleQuantityChange}
-        handleSaveChanges={handleSaveChanges}
         handleDeleteButton={() => setShowDeletePopup(true)}
+        // handleEditClick={setIsEditing}
+        // incrementQuantity={incrementQuantity}
+        // decrementQuantity={decrementQuantity}
+        // handleQuantityChange={handleQuantityChange}
+        // handleSaveChanges={handleSaveChanges}
       />
       <ConfirmEditModal
         show={showEditPopupConfirm}

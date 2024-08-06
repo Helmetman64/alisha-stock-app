@@ -8,13 +8,13 @@ const EditItemModal = ({
   validated,
   selectedItem,
   handleInputChange,
-  isEditing,
-  handleEditClick,
-  incrementQuantity,
-  decrementQuantity,
-  handleQuantityChange,
-  handleSaveChanges,
   handleDeleteButton,
+  // isEditing,
+  // handleEditClick,
+  // incrementQuantity,
+  // decrementQuantity,
+  // handleQuantityChange,
+  // handleSaveChanges,
 }) => {
   const preventMinus = (e) => {
     if (e.code === "Minus") {
@@ -29,7 +29,7 @@ const EditItemModal = ({
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Edit Item</Modal.Title>
+        <Modal.Title>Edit {selectedItem.itemName}</Modal.Title>
       </Modal.Header>
       <Form noValidate validated={validated} onSubmit={handleEditSubmit}>
         <Modal.Body>
