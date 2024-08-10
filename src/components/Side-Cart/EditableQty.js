@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-const EditableQuantity = ({ initialQuantity, onQuantityChange }) => {
+const EditableQuantity = ({
+  initialQuantity,
+  onQuantityChange,
+  maxQuantity,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [quantity, setQuantity] = useState(initialQuantity);
 
@@ -10,9 +14,10 @@ const EditableQuantity = ({ initialQuantity, onQuantityChange }) => {
 
   const handleBlur = () => {
     setIsEditing(false);
-    if (quantity !== initialQuantity) {
-      onQuantityChange(quantity);
+    if (quantity > maxQuantity) {
+      setQuantity(maxQuantity);
     }
+    onQuantityChange(Math.min(quantity, maxQuantity));
   };
 
   const handleChange = (e) => {

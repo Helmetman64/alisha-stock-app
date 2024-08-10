@@ -3,7 +3,7 @@ import supabase from "../services/supabaseClient";
 import Card from "react-bootstrap/Card";
 import StockCards from "./StockCards";
 import EditableQuantity from "./Side-Cart/EditableQty";
-import { Button, Alert } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import ConfirmSellModal from "./Modals/ConfirmSellModal";
 import SoldModal from "./Modals/SoldModal";
 
@@ -16,18 +16,18 @@ export default function Home() {
   const [showTotal, setShowTotal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(""); // Error message state
 
+  const fetchItems = async () => {
+    const { data, error } = await supabase.from("Item").select("*");
+
+    if (error) {
+      setFetchError("Could not fetch the items");
+      setItems([]);
+    } else {
+      setItems(data);
+    }
+  };
+
   useEffect(() => {
-    const fetchItems = async () => {
-      const { data, error } = await supabase.from("Item").select("*");
-
-      if (error) {
-        setFetchError("Could not fetch the items");
-        setItems([]);
-      } else {
-        setItems(data);
-      }
-    };
-
     fetchItems();
   }, []);
 
@@ -37,6 +37,7 @@ export default function Home() {
 
   const handleCloseSoldModal = () => {
     setShowSoldPopup(false);
+    fetchItems();
   };
 
   const handleCardClick = useCallback((item) => {
@@ -48,8 +49,8 @@ export default function Home() {
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
       if (updatedClickedCards[id]) {
-        if (updatedClickedCards[id].count < stock) {
-          updatedClickedCards[id].count += 1;
+        if (updatedClickedCards[id].currentQTY < stock) {
+          updatedClickedCards[id].currentQTY += 1;
         } else {
           setErrorMessage(
             `Cannot add more than ${stock} items of ${item.itemName} to the cart.`
@@ -57,7 +58,7 @@ export default function Home() {
         }
       } else {
         if (stock > 0) {
-          updatedClickedCards[id] = { id, count: 1 };
+          updatedClickedCards[id] = { id, currentQTY: 1 };
         } else {
           setErrorMessage(
             `Cannot add ${item.itemName} to the cart as it is out of stock.`
@@ -72,24 +73,22 @@ export default function Home() {
     const item = items.find((item) => item.itemID === id);
     const stock = item.itemQTY;
 
-    if (newQuantity <= stock) {
-      setClickedCards((prevClickedCards) => {
-        const updatedClickedCards = { ...prevClickedCards };
-        if (updatedClickedCards[id]) {
-          updatedClickedCards[id].count = Math.max(0, newQuantity);
-          if (updatedClickedCards[id].count === 0) {
-            const { [id]: _, ...remaining } = updatedClickedCards;
-            return remaining;
-          }
+    // Cap the new quantity at the stock level
+    const cappedQuantity = Math.min(newQuantity, stock);
+    setClickedCards((prevClickedCards) => {
+      const updatedClickedCards = { ...prevClickedCards };
+      if (updatedClickedCards[id]) {
+        updatedClickedCards[id].currentQTY = Math.max(0, cappedQuantity);
+        if (updatedClickedCards[id].currentQTY === 0) {
+          const { [id]: _, ...remaining } = updatedClickedCards;
+          return remaining;
         }
-        return updatedClickedCards;
-      });
-      setErrorMessage(""); // Clear error message
-    } else {
-      setErrorMessage(
-        `Cannot add more than ${stock} items of ${item.itemName} to the cart.`
-      );
-    }
+      }
+      return updatedClickedCards;
+    });
+
+    // Clear error message
+    setErrorMessage("");
   };
 
   const handleRemoveItem = (id) => {
@@ -107,8 +106,8 @@ export default function Home() {
       const updatedClickedCards = { ...prevClickedCards };
       const item = items.find((item) => item.itemID === id);
       if (updatedClickedCards[id]) {
-        if (updatedClickedCards[id].count < item.itemQTY) {
-          updatedClickedCards[id].count += 1;
+        if (updatedClickedCards[id].currentQTY < item.itemQTY) {
+          updatedClickedCards[id].currentQTY += 1;
           setErrorMessage(""); // Clear error message
         } else {
           setErrorMessage(
@@ -123,8 +122,8 @@ export default function Home() {
   const handleDecrementQuantity = (id) => {
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
-      if (updatedClickedCards[id] && updatedClickedCards[id].count > 1) {
-        updatedClickedCards[id].count -= 1;
+      if (updatedClickedCards[id] && updatedClickedCards[id].currentQTY > 1) {
+        updatedClickedCards[id].currentQTY -= 1;
       } else {
         const { [id]: _, ...remaining } = updatedClickedCards;
         return remaining;
@@ -135,23 +134,24 @@ export default function Home() {
 
   const calculateTotal = () => {
     return Object.values(clickedCards)
-      .reduce((total, { id, count }) => {
+      .reduce((total, { id, currentQTY }) => {
         const item = items.find((item) => item.itemID === id);
         if (item) {
-          return total + item.itemPrice * count;
+          return total + item.itemPrice * currentQTY;
         }
         return total;
       }, 0)
       .toFixed(2);
   };
 
-  const cartItems = Object.values(clickedCards).map(({ id, count }) => {
+  const cartItems = Object.values(clickedCards).map(({ id, currentQTY }) => {
     const item = items.find((item) => item.itemID === id);
     return {
       itemID: id,
       itemName: item?.itemName,
       itemPrice: item?.itemPrice,
-      count: count,
+      currentQTY: currentQTY,
+      itemQTY: item?.itemQTY,
     };
   });
 
@@ -160,7 +160,7 @@ export default function Home() {
     let totalAmount = 0;
 
     cartItems.forEach((item) => {
-      totalAmount += item.itemPrice * item.count;
+      totalAmount += item.itemPrice * item.currentQTY;
     });
 
     // Insert into Sales table
@@ -182,7 +182,7 @@ export default function Home() {
       itemID: item.itemID,
       itemName: item.itemName,
       salePrice: item.itemPrice,
-      qtySold: item.count,
+      qtySold: item.currentQTY,
     }));
 
     const { error: saleItemsError } = await supabase
@@ -196,7 +196,7 @@ export default function Home() {
 
     // Update stock levels
     for (const item of cartItems) {
-      const { itemID, count } = item;
+      const { itemID, currentQTY } = item;
       const { data: itemData, error: itemError } = await supabase
         .from("Item")
         .select("itemQTY")
@@ -208,7 +208,7 @@ export default function Home() {
         continue;
       }
 
-      const newStock = itemData.itemQTY - count;
+      const newStock = itemData.itemQTY - currentQTY;
 
       const { error: updateError } = await supabase
         .from("Item")
@@ -223,9 +223,9 @@ export default function Home() {
     // Log sale information to console
     let logMessage = `Sale Date: ${saleDate}\nItems Sold:\n`;
     cartItems.forEach((item) => {
-      const total = item.itemPrice * item.count;
+      const total = item.itemPrice * item.currentQTY;
       logMessage += `Item: ${item.itemName}, Qty: ${
-        item.count
+        item.currentQTY
       }, Unit Price: $${item.itemPrice.toFixed(2)}, Total: $${total.toFixed(
         2
       )}\n`;
@@ -249,7 +249,7 @@ export default function Home() {
           <h1>Cart is empty :(</h1>
         ) : (
           <>
-            {Object.values(clickedCards).map(({ id, count }) => {
+            {Object.values(clickedCards).map(({ id, currentQTY }) => {
               const item = items.find((item) => item.itemID === id);
               return (
                 <div key={id}>
@@ -266,16 +266,16 @@ export default function Home() {
                       </Card.Title>
                       <Card.Text className="d-flex justify-content-between">
                         <EditableQuantity
-                          initialQuantity={count}
+                          initialQuantity={currentQTY}
                           onQuantityChange={(newQuantity) =>
                             handleQuantityChange(id, newQuantity)
                           }
-                          onBlur={() => handleQuantityChange(id, count)} // Handle blur event
+                          maxQuantity={item?.itemQTY}
                         />
                         <span className="bold-label">
                           Price:{" "}
                           <span className="normal-value">
-                            ${(item?.itemPrice * count).toFixed(2)}
+                            ${(item?.itemPrice * currentQTY).toFixed(2)}
                           </span>
                         </span>
                       </Card.Text>
@@ -301,7 +301,7 @@ export default function Home() {
             </div>
           </>
         )}
-        {errorMessage && (
+        {/* {errorMessage && (
           <Alert
             variant="danger"
             onClose={() => setErrorMessage("")}
@@ -309,7 +309,7 @@ export default function Home() {
           >
             {errorMessage}
           </Alert>
-        )}
+        )} */}
       </div>
       <div className="home">
         <StockCards

@@ -39,6 +39,7 @@ const ConfirmSellModal = ({
     } else {
       setErrorMessage("");
     }
+    console.log("handleBlur called with id:", id, "value:", value);
   };
 
   if (!show) {
@@ -88,7 +89,7 @@ const ConfirmSellModal = ({
                       </Button>
                       <input
                         type="number"
-                        value={item.count}
+                        value={item.currentQTY}
                         className="stock-qty"
                         onChange={(e) =>
                           handleInputChange(item.itemID, e.target.value)
@@ -104,7 +105,7 @@ const ConfirmSellModal = ({
                       </Button>
                     </div>
                   </td>
-                  <td>${(item.itemPrice * item.count).toFixed(2)}</td>
+                  <td>${(item.itemPrice * item.currentQTY).toFixed(2)}</td>
                   <td>
                     <i
                       className="bi bi-trash clickable-icon"
