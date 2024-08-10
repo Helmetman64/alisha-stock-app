@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import supabase from "../services/supabaseClient";
-import { Table } from "react-bootstrap";
+import { Table, Pagination } from "react-bootstrap";
 
 const History = () => {
   const [salesHistory, setSalesHistory] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Set the number of items per page
 
   const fetchSalesHistory = async () => {
     const { data, error } = await supabase
@@ -43,9 +45,20 @@ const History = () => {
     getSalesHistory();
   }, []);
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = salesHistory.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(salesHistory.length / itemsPerPage);
+
+  const handleFirstPage = () => setCurrentPage(1);
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handleLastPage = () => setCurrentPage(totalPages);
+
   return (
     <div>
-      <h2>Sales History</h2>
       <Table striped bordered hover responsive>
         <thead>
           <tr>
@@ -59,9 +72,9 @@ const History = () => {
           </tr>
         </thead>
         <tbody>
-          {salesHistory.map((item, index) => {
+          {currentItems.map((item, index) => {
             const shouldRenderSaleID =
-              index === 0 || item.saleID !== salesHistory[index - 1].saleID;
+              index === 0 || item.saleID !== currentItems[index - 1].saleID;
             return (
               <tr key={index}>
                 {shouldRenderSaleID && (
@@ -71,7 +84,16 @@ const History = () => {
                 <td>{item.qtySold}</td>
                 <td>${item.salePrice.toFixed(2)}</td>
                 <td>${(item.qtySold * item.salePrice).toFixed(2)}</td>
-                <td>{new Date(item.Sales.saleDate).toLocaleString()}</td>
+                <td>
+                  {new Date(item.Sales.saleDate).toLocaleString("en-AU", {
+                    year: "numeric",
+                    month: "numeric",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })}
+                </td>
                 {shouldRenderSaleID && (
                   <td rowSpan={item.saleIDCount}>
                     ${item.Sales.totalAmount.toFixed(2)}
@@ -82,6 +104,33 @@ const History = () => {
           })}
         </tbody>
       </Table>
+      <Pagination>
+        <Pagination.First
+          onClick={handleFirstPage}
+          disabled={currentPage === 1}
+        />
+        <Pagination.Prev
+          onClick={handlePrevPage}
+          disabled={currentPage === 1}
+        />
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+          <Pagination.Item
+            key={number}
+            active={number === currentPage}
+            onClick={() => setCurrentPage(number)}
+          >
+            {number}
+          </Pagination.Item>
+        ))}
+        <Pagination.Next
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+        />
+        <Pagination.Last
+          onClick={handleLastPage}
+          disabled={currentPage === totalPages}
+        />
+      </Pagination>
     </div>
   );
 };

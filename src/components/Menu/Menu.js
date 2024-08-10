@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "react-bootstrap";
 import { useLocation, Link } from "react-router-dom";
 import styles from "./Menu.module.css"; // Ensure this path is correct
 
@@ -48,11 +47,6 @@ const Menu = () => {
             <li className={`${styles.navItem} ${isActive("/history")}`}>
               <Link to="/history" onClick={closeMenu}>
                 History
-              </Link>
-            </li>
-            <li className={`${styles.navItem} ${isActive("/dashboard")}`}>
-              <Link to="/dashboard" onClick={closeMenu}>
-                Dashboard
               </Link>
             </li>
           </ul>
