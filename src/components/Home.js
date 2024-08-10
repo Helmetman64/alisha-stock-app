@@ -14,54 +14,81 @@ export default function Home() {
   const [items, setItems] = useState([]);
   const [clickedCards, setClickedCards] = useState({});
   const [showTotal, setShowTotal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // Error message state
+
+  const fetchItems = async () => {
+    const { data, error } = await supabase.from("Item").select("*");
+
+    if (error) {
+      setFetchError("Could not fetch the items");
+      setItems([]);
+    } else {
+      setItems(data);
+    }
+  };
 
   useEffect(() => {
-    const fetchItems = async () => {
-      const { data, error } = await supabase.from("Item").select("*");
-
-      if (error) {
-        setFetchError("Could not fetch the items");
-        setItems([]);
-      } else {
-        setItems(data);
-      }
-    };
-
     fetchItems();
   }, []);
 
-  const handleClose = () => {
+  const handleCloseSellItemPopup = () => {
     setShowSellItemPopup(false);
+  };
+
+  const handleCloseSoldModal = () => {
     setShowSoldPopup(false);
+    fetchItems();
   };
 
   const handleCardClick = useCallback((item) => {
     const id = item.itemID;
+    const stock = item.itemQTY;
     setShowTotal(true);
+    setErrorMessage(""); // Clear previous error message
 
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
       if (updatedClickedCards[id]) {
-        updatedClickedCards[id].count += 1;
+        if (updatedClickedCards[id].currentQTY < stock) {
+          updatedClickedCards[id].currentQTY += 1;
+        } else {
+          setErrorMessage(
+            `Cannot add more than ${stock} items of ${item.itemName} to the cart.`
+          );
+        }
       } else {
-        updatedClickedCards[id] = { id, count: 1 };
+        if (stock > 0) {
+          updatedClickedCards[id] = { id, currentQTY: 1 };
+        } else {
+          setErrorMessage(
+            `Cannot add ${item.itemName} to the cart as it is out of stock.`
+          );
+        }
       }
       return updatedClickedCards;
     });
   }, []);
 
   const handleQuantityChange = (id, newQuantity) => {
+    const item = items.find((item) => item.itemID === id);
+    const stock = item.itemQTY;
+
+    // Cap the new quantity at the stock level
+    const cappedQuantity = Math.min(newQuantity, stock);
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
       if (updatedClickedCards[id]) {
-        updatedClickedCards[id].count = Math.max(0, newQuantity);
-        if (updatedClickedCards[id].count === 0) {
+        updatedClickedCards[id].currentQTY = Math.max(0, cappedQuantity);
+        if (updatedClickedCards[id].currentQTY === 0) {
           const { [id]: _, ...remaining } = updatedClickedCards;
           return remaining;
         }
       }
       return updatedClickedCards;
     });
+
+    // Clear error message
+    setErrorMessage("");
   };
 
   const handleRemoveItem = (id) => {
@@ -77,8 +104,16 @@ export default function Home() {
   const handleIncrementQuantity = (id) => {
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
+      const item = items.find((item) => item.itemID === id);
       if (updatedClickedCards[id]) {
-        updatedClickedCards[id].count += 1;
+        if (updatedClickedCards[id].currentQTY < item.itemQTY) {
+          updatedClickedCards[id].currentQTY += 1;
+          setErrorMessage(""); // Clear error message
+        } else {
+          setErrorMessage(
+            `Cannot add more than ${item.itemQTY} items of ${item.itemName} to the cart.`
+          );
+        }
       }
       return updatedClickedCards;
     });
@@ -87,8 +122,8 @@ export default function Home() {
   const handleDecrementQuantity = (id) => {
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
-      if (updatedClickedCards[id] && updatedClickedCards[id].count > 1) {
-        updatedClickedCards[id].count -= 1;
+      if (updatedClickedCards[id] && updatedClickedCards[id].currentQTY > 1) {
+        updatedClickedCards[id].currentQTY -= 1;
       } else {
         const { [id]: _, ...remaining } = updatedClickedCards;
         return remaining;
@@ -99,23 +134,24 @@ export default function Home() {
 
   const calculateTotal = () => {
     return Object.values(clickedCards)
-      .reduce((total, { id, count }) => {
+      .reduce((total, { id, currentQTY }) => {
         const item = items.find((item) => item.itemID === id);
         if (item) {
-          return total + item.itemPrice * count;
+          return total + item.itemPrice * currentQTY;
         }
         return total;
       }, 0)
       .toFixed(2);
   };
 
-  const cartItems = Object.values(clickedCards).map(({ id, count }) => {
+  const cartItems = Object.values(clickedCards).map(({ id, currentQTY }) => {
     const item = items.find((item) => item.itemID === id);
     return {
       itemID: id,
       itemName: item?.itemName,
       itemPrice: item?.itemPrice,
-      count: count,
+      currentQTY: currentQTY,
+      itemQTY: item?.itemQTY,
     };
   });
 
@@ -124,7 +160,7 @@ export default function Home() {
     let totalAmount = 0;
 
     cartItems.forEach((item) => {
-      totalAmount += item.itemPrice * item.count;
+      totalAmount += item.itemPrice * item.currentQTY;
     });
 
     // Insert into Sales table
@@ -146,7 +182,7 @@ export default function Home() {
       itemID: item.itemID,
       itemName: item.itemName,
       salePrice: item.itemPrice,
-      qtySold: item.count,
+      qtySold: item.currentQTY,
     }));
 
     const { error: saleItemsError } = await supabase
@@ -158,12 +194,38 @@ export default function Home() {
       return;
     }
 
+    // Update stock levels
+    for (const item of cartItems) {
+      const { itemID, currentQTY } = item;
+      const { data: itemData, error: itemError } = await supabase
+        .from("Item")
+        .select("itemQTY")
+        .eq("itemID", itemID)
+        .single();
+
+      if (itemError) {
+        console.error("Error fetching item:", itemError);
+        continue;
+      }
+
+      const newStock = itemData.itemQTY - currentQTY;
+
+      const { error: updateError } = await supabase
+        .from("Item")
+        .update({ itemQTY: newStock })
+        .eq("itemID", itemID);
+
+      if (updateError) {
+        console.error("Error updating item stock:", updateError);
+      }
+    }
+
     // Log sale information to console
     let logMessage = `Sale Date: ${saleDate}\nItems Sold:\n`;
     cartItems.forEach((item) => {
-      const total = item.itemPrice * item.count;
+      const total = item.itemPrice * item.currentQTY;
       logMessage += `Item: ${item.itemName}, Qty: ${
-        item.count
+        item.currentQTY
       }, Unit Price: $${item.itemPrice.toFixed(2)}, Total: $${total.toFixed(
         2
       )}\n`;
@@ -171,9 +233,9 @@ export default function Home() {
     logMessage += `Overall Total: $${totalAmount.toFixed(2)}`;
     console.log(logMessage);
 
-    setShowSellItemPopup(false);
-    setShowSoldPopup(true);
-    // Reset cartItems or update UI accordingly
+    setShowSellItemPopup(false); // Hide ConfirmSellModal
+    setClickedCards({}); // Reset cart items
+    setShowSoldPopup(true); // Show SoldModal
   };
 
   return (
@@ -187,7 +249,7 @@ export default function Home() {
           <h1>Cart is empty :(</h1>
         ) : (
           <>
-            {Object.values(clickedCards).map(({ id, count }) => {
+            {Object.values(clickedCards).map(({ id, currentQTY }) => {
               const item = items.find((item) => item.itemID === id);
               return (
                 <div key={id}>
@@ -204,15 +266,16 @@ export default function Home() {
                       </Card.Title>
                       <Card.Text className="d-flex justify-content-between">
                         <EditableQuantity
-                          initialQuantity={count}
+                          initialQuantity={currentQTY}
                           onQuantityChange={(newQuantity) =>
                             handleQuantityChange(id, newQuantity)
                           }
+                          maxQuantity={item?.itemQTY}
                         />
                         <span className="bold-label">
                           Price:{" "}
                           <span className="normal-value">
-                            ${(item?.itemPrice * count).toFixed(2)}
+                            ${(item?.itemPrice * currentQTY).toFixed(2)}
                           </span>
                         </span>
                       </Card.Text>
@@ -238,6 +301,15 @@ export default function Home() {
             </div>
           </>
         )}
+        {/* {errorMessage && (
+          <Alert
+            variant="danger"
+            onClose={() => setErrorMessage("")}
+            dismissible
+          >
+            {errorMessage}
+          </Alert>
+        )} */}
       </div>
       <div className="home">
         <StockCards
@@ -249,7 +321,7 @@ export default function Home() {
       </div>
       <ConfirmSellModal
         show={showSellItemPopup}
-        handleClose={handleClose}
+        handleClose={handleCloseSellItemPopup}
         items={cartItems}
         total={calculateTotal()}
         incrementQuantity={handleIncrementQuantity}
@@ -258,7 +330,9 @@ export default function Home() {
         handleConfirmSale={handleConfirmSale}
         deleteItem={handleRemoveItem}
       />
-      <SoldModal show={showSoldPopup} handleClose={handleClose} />
+      <SoldModal show={showSoldPopup} handleClose={handleCloseSoldModal} />
     </div>
   );
 }
+
+//.

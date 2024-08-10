@@ -1,5 +1,5 @@
-import React from "react";
-import { Modal, Button, Table } from "react-bootstrap";
+import React, { useState } from "react";
+import { Modal, Button, Table, Alert } from "react-bootstrap";
 
 const ConfirmSellModal = ({
   show,
@@ -12,9 +12,38 @@ const ConfirmSellModal = ({
   handleQuantityChange,
   handleConfirmSale,
 }) => {
-  if (items.length === 0) {
-    handleClose();
-    return null;
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleInputChange = (id, value) => {
+    const item = items.find((item) => item.itemID === id);
+    const newQuantity = parseInt(value, 10);
+
+    if (newQuantity > item.itemQTY) {
+      setErrorMessage(
+        `Cannot add more than ${item.itemQTY} items of ${item.itemName} to the cart!`
+      );
+    } else {
+      setErrorMessage("");
+      handleQuantityChange(id, newQuantity);
+    }
+  };
+
+  const handleBlur = (id, value) => {
+    const item = items.find((item) => item.itemID === id);
+    const newQuantity = parseInt(value, 10);
+
+    if (newQuantity > item.itemQTY) {
+      setErrorMessage(
+        `Cannot add more than ${item.itemQTY} items of ${item.itemName} to the cart!`
+      );
+    } else {
+      setErrorMessage("");
+    }
+    console.log("handleBlur called with id:", id, "value:", value);
+  };
+
+  if (!show) {
+    return null; // Return null to avoid rendering when not visible
   }
 
   return (
@@ -23,6 +52,15 @@ const ConfirmSellModal = ({
         <Modal.Title>Sell Items</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        {errorMessage && (
+          <Alert
+            variant="danger"
+            onClose={() => setErrorMessage("")}
+            dismissible
+          >
+            {errorMessage}
+          </Alert>
+        )}
         {items.length === 0 ? (
           <p>No items to display.</p>
         ) : (
@@ -51,11 +89,12 @@ const ConfirmSellModal = ({
                       </Button>
                       <input
                         type="number"
-                        value={item.count}
+                        value={item.currentQTY}
                         className="stock-qty"
                         onChange={(e) =>
-                          handleQuantityChange(item.itemID, e.target.value)
+                          handleInputChange(item.itemID, e.target.value)
                         }
+                        onBlur={(e) => handleBlur(item.itemID, e.target.value)}
                         min="0"
                       />
                       <Button
@@ -66,7 +105,7 @@ const ConfirmSellModal = ({
                       </Button>
                     </div>
                   </td>
-                  <td>${(item.itemPrice * item.count).toFixed(2)}</td>
+                  <td>${(item.itemPrice * item.currentQTY).toFixed(2)}</td>
                   <td>
                     <i
                       className="bi bi-trash clickable-icon"
