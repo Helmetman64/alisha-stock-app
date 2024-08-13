@@ -6,11 +6,11 @@ const ConfirmSellModal = ({
   handleClose,
   items,
   total,
-  deleteItem,
   incrementQuantity,
   decrementQuantity,
   handleQuantityChange,
   handleConfirmSale,
+  deleteItem,
 }) => {
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -18,28 +18,21 @@ const ConfirmSellModal = ({
     const item = items.find((item) => item.itemID === id);
     const newQuantity = parseInt(value, 10);
 
-    if (newQuantity > item.itemQTY) {
+    if (!isNaN(newQuantity) && newQuantity <= item.itemQTY) {
+      setErrorMessage("");
+      handleQuantityChange(id, newQuantity);
+    } else if (newQuantity > item.itemQTY) {
       setErrorMessage(
         `Cannot add more than ${item.itemQTY} items of ${item.itemName} to the cart!`
       );
-    } else {
-      setErrorMessage("");
-      handleQuantityChange(id, newQuantity);
     }
   };
 
   const handleBlur = (id, value) => {
-    const item = items.find((item) => item.itemID === id);
-    const newQuantity = parseInt(value, 10);
+    const newQuantity = value === "" ? 0 : parseInt(value, 10);
 
-    if (newQuantity > item.itemQTY) {
-      setErrorMessage(
-        `Cannot add more than ${item.itemQTY} items of ${item.itemName} to the cart!`
-      );
-    } else {
-      setErrorMessage("");
-    }
-    console.log("handleBlur called with id:", id, "value:", value);
+    handleQuantityChange(id, newQuantity);
+    setErrorMessage(""); // Clear any error message when the input loses focus
   };
 
   if (!show) {

@@ -220,19 +220,6 @@ export default function Home() {
       }
     }
 
-    // Log sale information to console
-    let logMessage = `Sale Date: ${saleDate}\nItems Sold:\n`;
-    cartItems.forEach((item) => {
-      const total = item.itemPrice * item.currentQTY;
-      logMessage += `Item: ${item.itemName}, Qty: ${
-        item.currentQTY
-      }, Unit Price: $${item.itemPrice.toFixed(2)}, Total: $${total.toFixed(
-        2
-      )}\n`;
-    });
-    logMessage += `Overall Total: $${totalAmount.toFixed(2)}`;
-    console.log(logMessage);
-
     setShowSellItemPopup(false); // Hide ConfirmSellModal
     setClickedCards({}); // Reset cart items
     setShowSoldPopup(true); // Show SoldModal
@@ -301,15 +288,6 @@ export default function Home() {
             </div>
           </>
         )}
-        {/* {errorMessage && (
-          <Alert
-            variant="danger"
-            onClose={() => setErrorMessage("")}
-            dismissible
-          >
-            {errorMessage}
-          </Alert>
-        )} */}
       </div>
       <div className="home">
         <StockCards

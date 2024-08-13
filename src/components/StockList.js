@@ -99,49 +99,40 @@ const StockList = () => {
   };
 
   const handleDeleteItem = async () => {
-    const { error } = await supabase
-      .from("Item")
-      .delete()
-      .eq("itemID", selectedItem.itemID);
+    try {
+      // Step 1: Delete related rows in SaleItems
+      const { error: saleItemsError } = await supabase
+        .from("SaleItems")
+        .delete()
+        .eq("itemID", selectedItem.itemID);
 
-    if (error) {
-      console.log(error);
-    } else {
+      if (saleItemsError) {
+        throw saleItemsError;
+      }
+
+      // Step 2: Delete the item from Item table
+      const { error: itemError } = await supabase
+        .from("Item")
+        .delete()
+        .eq("itemID", selectedItem.itemID);
+
+      if (itemError) {
+        throw itemError;
+      }
+
+      // Update the state to remove the item from the UI
       setItems(items.filter((item) => item.itemID !== selectedItem.itemID));
+    } catch (error) {
+      console.log(error);
+    } finally {
+      handleClose();
     }
-
-    handleClose();
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setSelectedItem({ ...selectedItem, [name]: value });
   };
-
-  // const incrementQuantity = () => {
-  //   setSelectedItem((prevState) => ({
-  //     ...prevState,
-  //     itemQTY: validatePositiveNumber(prevState.itemQTY + 1),
-  //   }));
-  // };
-
-  // const decrementQuantity = () => {
-  //   setSelectedItem((prevState) => ({
-  //     ...prevState,
-  //     itemQTY: validatePositiveNumber(prevState.itemQTY - 1),
-  //   }));
-  // };
-
-  // const handleQuantityChange = (value) => {
-  //   setSelectedItem((prevState) => ({
-  //     ...prevState,
-  //     itemQTY: validatePositiveNumber(value),
-  //   }));
-  // };
-
-  // const validatePositiveNumber = (value) => {
-  //   return Math.max(1, value);
-  // };
 
   const handleSaveChanges = async () => {
     const { data, error } = await supabase
@@ -204,11 +195,6 @@ const StockList = () => {
         selectedItem={selectedItem}
         handleInputChange={handleInputChange}
         handleDeleteButton={() => setShowDeletePopup(true)}
-        // handleEditClick={setIsEditing}
-        // incrementQuantity={incrementQuantity}
-        // decrementQuantity={decrementQuantity}
-        // handleQuantityChange={handleQuantityChange}
-        // handleSaveChanges={handleSaveChanges}
       />
       <ConfirmEditModal
         show={showEditPopupConfirm}

@@ -138,6 +138,19 @@ button.stock-qty-btn:hover {
 text-align: right;
 }
 
+.history-container {
+  display: flex;
+}
+
+.history-table {
+  flex-grow: 4;
+}
+
+.chart-container {
+  width: 400px;
+  height: 400px
+}
+
 
 @media only screen and (max-width: 1180px) {
   .side-cart {
@@ -146,5 +159,9 @@ text-align: right;
 
   .full-container {
     width: fit-content;
+  }
+
+  .history-container {
+    flex-wrap: wrap;
   }
 }
