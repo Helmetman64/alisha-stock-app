@@ -9,12 +9,6 @@ const EditItemModal = ({
   selectedItem,
   handleInputChange,
   handleDeleteButton,
-  // isEditing,
-  // handleEditClick,
-  // incrementQuantity,
-  // decrementQuantity,
-  // handleQuantityChange,
-  // handleSaveChanges,
 }) => {
   const preventMinus = (e) => {
     if (e.code === "Minus") {

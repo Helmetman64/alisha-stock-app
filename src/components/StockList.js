@@ -24,7 +24,6 @@ const StockList = () => {
     itemPrice: "",
     itemQTY: "",
   });
-  // const [isEditing, setIsEditing] = useState(null);
   const [validated, setValidated] = useState(false);
 
   const handleShowEditPopup = (item) => {
