@@ -1,6 +1,6 @@
 # Alishas Secret Garden Stock App 
 This is a web app to track Alisha's stock. The app is built with React and hosted on Supabase and Netlify.
-Current demo is https://dainty-cat-ca8f26.netlify.app/
+Current demo is https://asgstock.netlify.app/
 The app will be able to:
 - Sell an Item/s
 - Display all Items with their description, quantity and price
