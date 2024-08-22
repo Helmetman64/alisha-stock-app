@@ -1,10 +1,5 @@
 /* Styling for the stock cards */
- 
-.card {
-    width: 50px;
-    margin-bottom: 20px;
-}
-    
+     
 .bold-label {
     font-weight: bold;
 }
@@ -149,6 +144,15 @@ text-align: right;
 .chart-container {
   width: 400px;
   height: 400px
+}
+
+.dashboard-container {
+  width: 100%;
+  display: flex;
+}
+
+.total-sales-container {
+  /* width: 100%; */
 }
 
 
