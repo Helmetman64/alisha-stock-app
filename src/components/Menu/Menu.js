@@ -49,6 +49,11 @@ const Menu = () => {
                 History
               </Link>
             </li>
+            <li className={`${styles.navItem} ${isActive("/dashboard")}`}>
+              <Link to="/dashboard" onClick={closeMenu}>
+                Dashboard
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

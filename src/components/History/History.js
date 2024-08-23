@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from "react";
-import supabase from "../services/supabaseClient";
+import supabase from "../../services/supabaseClient";
 import { Table, Pagination } from "react-bootstrap";
 import Piechart from "./Piechart";
-import ConfirmDeleteSaleModal from "./Modals/ConfirmDeleteSaleModal";
+import EditSaleModal from "../Modals/EditSaleModal";
+import ConfirmDeleteSaleModal from "../Modals/ConfirmDeleteSaleModal";
 
 const History = () => {
   const [salesHistory, setSalesHistory] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(15); // Set the number of items per page
+  const [itemsPerPage] = useState(15);
   const [showDeleteSalePopup, setShowDeleteSalePopup] = useState(false);
+  const [showEditSalePopup, setShowEditSalePopup] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
 
   const fetchSalesHistory = async () => {
     const { data, error } = await supabase
       .from("SaleItems")
       .select(
-        "saleID, itemName, qtySold, salePrice, Sales!inner(saleDate, totalAmount)"
+        "saleID, itemName, qtySold, salePrice, Sales!inner(saleDate, totalPrice)"
       )
       .order("saleID", { ascending: true });
 
@@ -38,6 +40,27 @@ const History = () => {
       saleIDCount: saleIDCount[item.saleID],
       rowspan: saleIDCount[item.saleID] > 1 ? saleIDCount[item.saleID] : 0,
     }));
+  };
+
+  const handleSaveChanges = async (saleID, newSaleDate) => {
+    try {
+      const { error } = await supabase
+        .from("Sales")
+        .update({ saleDate: newSaleDate })
+        .eq("saleID", saleID);
+
+      if (error) {
+        throw error;
+      }
+
+      // Refresh the sales history after saving changes
+      const updatedSalesHistory = await fetchSalesHistory();
+      setSalesHistory(updatedSalesHistory);
+    } catch (error) {
+      console.error("Error saving changes: ", error);
+    } finally {
+      handleClose();
+    }
   };
 
   const handleDeleteSale = async (saleID) => {
@@ -72,21 +95,26 @@ const History = () => {
     }
   };
 
-  const handleShowDeletePopup = (saleID) => {
+  const handleShowEditPopup = (saleID) => {
     const saleItems = salesHistory.filter((item) => item.saleID === saleID);
     const saleDetails = {
       saleID: saleID,
       saleDate: saleItems[0].Sales.saleDate,
-      totalAmount: saleItems[0].Sales.totalAmount,
+      totalPrice: saleItems[0].Sales.totalPrice,
       items: saleItems.map((item) => item.itemName).join(", "),
     };
     setSelectedSale(saleDetails);
-    setShowDeleteSalePopup(true);
+    setShowEditSalePopup(true);
   };
 
   const handleClose = () => {
     setShowDeleteSalePopup(false);
+    setShowEditSalePopup(false);
     setSelectedSale(null);
+  };
+
+  const handleShowDeletePopup = (saleID) => {
+    setShowDeleteSalePopup(true);
   };
 
   useEffect(() => {
@@ -129,8 +157,13 @@ const History = () => {
             {currentItems.map((item, index) => {
               const shouldRenderSaleID =
                 index === 0 || item.saleID !== currentItems[index - 1].saleID;
+
               return (
-                <tr key={index}>
+                <tr
+                  key={index}
+                  onClick={() => handleShowEditPopup(item.saleID)} // Add onClick to the row
+                  style={{ cursor: "pointer" }} // Optional: Change cursor style to indicate row is clickable
+                >
                   {shouldRenderSaleID && (
                     <td rowSpan={item.saleIDCount}>{item.saleID}</td>
                   )}
@@ -150,15 +183,7 @@ const History = () => {
                   </td>
                   {shouldRenderSaleID && (
                     <td rowSpan={item.saleIDCount}>
-                      ${item.Sales.totalAmount.toFixed(2)}
-                    </td>
-                  )}
-                  {shouldRenderSaleID && (
-                    <td rowSpan={item.saleIDCount}>
-                      <i
-                        className="bi bi-trash clickable-icon"
-                        onClick={() => handleShowDeletePopup(item.saleID)}
-                      />
+                      ${item.Sales.totalPrice.toFixed(2)}
                     </td>
                   )}
                 </tr>
@@ -166,6 +191,13 @@ const History = () => {
             })}
           </tbody>
         </Table>
+        <EditSaleModal
+          show={showEditSalePopup}
+          handleClose={handleClose}
+          selectedSale={selectedSale}
+          handleDeleteButton={handleShowDeletePopup}
+          handleSaveChanges={handleSaveChanges}
+        />
         <ConfirmDeleteSaleModal
           show={showDeleteSalePopup}
           handleClose={handleClose}

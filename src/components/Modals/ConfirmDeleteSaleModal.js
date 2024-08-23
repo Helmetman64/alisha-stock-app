@@ -35,7 +35,7 @@ const ConfirmDeleteSaleModal = ({
             </p>
             <p>
               <strong>Total Amount:</strong> $
-              {selectedSale.totalAmount.toFixed(2)}
+              {selectedSale.totalPrice.toFixed(2)}
             </p>
           </>
         ) : (
