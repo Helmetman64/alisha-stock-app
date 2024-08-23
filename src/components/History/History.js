@@ -172,7 +172,7 @@ const History = () => {
                   <td>${item.salePrice.toFixed(2)}</td>
                   <td>${(item.qtySold * item.salePrice).toFixed(2)}</td>
                   <td>
-                    {new Date(item.Sales.saleDate).toLocaleString("en", {
+                    {new Date(item.Sales.saleDate).toLocaleString("en-AU", {
                       year: "numeric",
                       month: "numeric",
                       day: "numeric",

@@ -3,7 +3,7 @@ import Menu from "./components/Menu/Menu";
 import StockList from "./components/StockList";
 import History from "./components/History/History";
 import { Route, Routes } from "react-router-dom";
-import { Dashboard } from "./components/Dashboard/Dashboard";
+import Dashboard from "./components/Dashboard/Dashboard";
 
 function App() {
   return (

@@ -4,7 +4,7 @@ import supabase from "../../services/supabaseClient";
 import { Card } from "react-bootstrap";
 import { BarChart } from "./BarChart";
 
-export const Dashboard = () => {
+const Dashboard = () => {
   const [salesHistory, setSalesHistory] = useState([]);
 
   const fetchSalesHistory = async () => {
@@ -48,7 +48,9 @@ export const Dashboard = () => {
           </Card.Body>
         </Card>
       </div>
-      <BarChart salesHistory={salesHistory} />
+      {/* <BarChart salesHistory={salesHistory} /> */}
     </div>
   );
 };
+
+export default Dashboard;
