@@ -8,7 +8,7 @@ export const Dashboard = () => {
   const [salesHistory, setSalesHistory] = useState([]);
 
   const fetchSalesHistory = async () => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("SaleItems")
       .select(
         "saleID, itemName, qtySold, salePrice, Sales!inner(saleDate, totalPrice)"

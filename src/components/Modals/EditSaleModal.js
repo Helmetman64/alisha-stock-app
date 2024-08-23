@@ -13,13 +13,13 @@ const EditSaleModal = ({
   );
 
   const handleDateChange = (event) => {
-    setNewSaleDate(event.target.value);
-    console.log(event.target.value);
+    const newDate = new Date(event.target.value);
+    setNewSaleDate(newDate);
   };
 
   const handleSaveClick = () => {
     handleSaveChanges(selectedSale.saleID, newSaleDate);
-    console.log();
+    console.log(newSaleDate);
   };
 
   const formatDateForInput = (date) => {

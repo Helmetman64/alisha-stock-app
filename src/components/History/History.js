@@ -44,7 +44,7 @@ const History = () => {
 
   const handleSaveChanges = async (saleID, newSaleDate) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("Sales")
         .update({ saleDate: newSaleDate })
         .eq("saleID", saleID);
@@ -172,7 +172,7 @@ const History = () => {
                   <td>${item.salePrice.toFixed(2)}</td>
                   <td>${(item.qtySold * item.salePrice).toFixed(2)}</td>
                   <td>
-                    {new Date(item.Sales.saleDate).toLocaleString("en-US", {
+                    {new Date(item.Sales.saleDate).toLocaleString("en", {
                       year: "numeric",
                       month: "numeric",
                       day: "numeric",
