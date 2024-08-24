@@ -78,6 +78,7 @@ const StockList = () => {
     setShowAddItemConfirm(false);
     setShowDeletePopup(false);
     setSelectedItem(null);
+    setSelectedVariation(null);
     setNewItem({
       itemName: "",
       itemDesc: "",
@@ -159,25 +160,80 @@ const StockList = () => {
     setSelectedItem({ ...selectedItem, [name]: value });
   };
 
-  const handleSaveChanges = async () => {
-    const { error } = await supabase
-      .from("Item")
-      .update({
-        itemName: selectedItem.itemName,
-        itemDesc: selectedItem.itemDesc,
-        itemPrice: selectedItem.itemPrice,
-        itemQTY: selectedItem.itemQTY,
-      })
-      .eq("itemID", selectedItem.itemID);
+  const handleVariationChange = (e) => {
+    const variationID = e.target.value;
+    const variation = selectedItem.variations.find(
+      (v) => v.variationID.toString() === variationID.toString()
+    );
 
-    if (error) {
-      console.log(error);
-    } else {
-      setItems((prevItems) =>
-        prevItems.map((item) =>
-          item.itemID === selectedItem.itemID ? selectedItem : item
-        )
-      );
+    console.log("Found Variation:", variation);
+
+    setSelectedVariation(variation);
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      // If a specific variation is selected, update the ItemVariation table
+      if (selectedVariation) {
+        const { error: variationError } = await supabase
+          .from("ItemVariation")
+          .update({
+            variationPrice: selectedItem.itemPrice,
+            variationQTY: selectedItem.itemQTY,
+          })
+          .eq("variationID", selectedVariation.variationID);
+
+        if (variationError) {
+          console.log("Error updating variation:", variationError);
+          return;
+        }
+
+        // Update the state for the specific variation
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.itemID === selectedItem.itemID
+              ? {
+                  ...item,
+                  variations: item.variations.map((variation) =>
+                    variation.variationID === selectedVariation.variationID
+                      ? {
+                          ...variation,
+                          variationPrice: selectedItem.itemPrice,
+                          variationQTY: selectedItem.itemQTY,
+                        }
+                      : variation
+                  ),
+                }
+              : item
+          )
+        );
+      } else {
+        // If no variation is selected, update the Item table
+        const { error: itemError } = await supabase
+          .from("Item")
+          .update({
+            itemName: selectedItem.itemName,
+            itemDesc: selectedItem.itemDesc,
+            itemPrice: selectedItem.itemPrice,
+            itemQTY: selectedItem.itemQTY,
+          })
+          .eq("itemID", selectedItem.itemID);
+
+        if (itemError) {
+          console.log("Error updating item:", itemError);
+          return;
+        }
+
+        // Update the state for the item
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.itemID === selectedItem.itemID ? selectedItem : item
+          )
+        );
+      }
+    } catch (error) {
+      console.log("Unexpected error:", error);
+    } finally {
       handleClose();
     }
   };
@@ -225,6 +281,7 @@ const StockList = () => {
         selectedItem={selectedItem}
         handleInputChange={handleInputChange}
         handleDeleteButton={() => setShowDeletePopup(true)}
+        handleVariationChange={handleVariationChange} // Pass the function as a prop
       />
       <ConfirmEditModal
         show={showEditPopupConfirm}

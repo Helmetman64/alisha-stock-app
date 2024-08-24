@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
 const EditItemModal = ({
@@ -9,8 +9,23 @@ const EditItemModal = ({
   selectedItem,
   handleInputChange,
   handleDeleteButton,
+  handleVariationChange, // Make sure this is passed
 }) => {
   const [selectedVariation, setSelectedVariation] = useState(null);
+
+  useEffect(() => {
+    // When selectedItem changes, update selectedVariation to match the variation if available
+    if (
+      selectedItem &&
+      selectedItem.variations &&
+      selectedItem.variations.length > 0
+    ) {
+      // Default to first variation if none is selected
+      setSelectedVariation(selectedItem.variations[0]);
+    } else {
+      setSelectedVariation(null);
+    }
+  }, [selectedItem]);
 
   const preventMinus = (e) => {
     if (e.code === "Minus") {
@@ -18,21 +33,13 @@ const EditItemModal = ({
     }
   };
 
-  const handleVariationChange = (e) => {
+  // Make sure handleVariationChange updates selectedVariation correctly
+  const onVariationChange = (e) => {
     const variationID = e.target.value;
-
-    // Ensure selectedItem and variations are correctly populated
-    if (!selectedItem || !selectedItem.variations) {
-      console.error("Selected item or variations array is missing.");
-      return;
-    }
-
-    // Find the selected variation
+    handleVariationChange(e); // Call parent function to update selectedVariation
     const variation = selectedItem.variations.find(
       (v) => v.variationID.toString() === variationID.toString()
     );
-
-    // Update state with the selected variation
     setSelectedVariation(variation);
   };
 
@@ -83,7 +90,7 @@ const EditItemModal = ({
               <Form.Label>Select Variation</Form.Label>
               <Form.Control
                 as="select"
-                onChange={handleVariationChange}
+                onChange={onVariationChange}
                 value={selectedVariation ? selectedVariation.variationID : ""}
               >
                 <option value="">Choose a variation...</option>
@@ -92,7 +99,7 @@ const EditItemModal = ({
                     key={variation.variationID}
                     value={variation.variationID}
                   >
-                    {variation.variationName} - ${variation.variationPrice}
+                    {variation.variationName}
                   </option>
                 ))}
               </Form.Control>
