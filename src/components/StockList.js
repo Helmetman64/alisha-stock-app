@@ -15,6 +15,7 @@ const StockList = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showEditPopupConfirm, setShowEditPopupConfirm] = useState(false);
+  const [selectedVariation, setSelectedVariation] = useState(null);
   const [showAddItemPopup, setShowAddItemPopup] = useState(false);
   const [showAddItemConfirm, setShowAddItemConfirm] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
@@ -26,8 +27,24 @@ const StockList = () => {
   });
   const [validated, setValidated] = useState(false);
 
-  const handleShowEditPopup = (item) => {
-    setSelectedItem(item);
+  const fetchItemVariations = async (itemID) => {
+    const { data, error } = await supabase
+      .from("ItemVariation")
+      .select("*")
+      .eq("itemID", itemID);
+
+    if (error) {
+      console.log("Error fetching variations:", error);
+      return [];
+    }
+
+    return data;
+  };
+
+  const handleShowEditPopup = async (item) => {
+    // Fetch variations for the selected item
+    const variations = await fetchItemVariations(item.itemID);
+    setSelectedItem({ ...item, variations });
     setShowEditPopup(true);
   };
 
@@ -39,7 +56,15 @@ const StockList = () => {
         setFetchError("Could not fetch the items");
         setItems([]);
       } else {
-        setItems(data);
+        // Include variations for each item
+        const itemsWithVariations = await Promise.all(
+          data.map(async (item) => {
+            const variations = await fetchItemVariations(item.itemID);
+            return { ...item, variations };
+          })
+        );
+
+        setItems(itemsWithVariations);
       }
     };
 
@@ -52,6 +77,7 @@ const StockList = () => {
     setShowAddItemPopup(false);
     setShowAddItemConfirm(false);
     setShowDeletePopup(false);
+    setSelectedItem(null);
     setNewItem({
       itemName: "",
       itemDesc: "",
@@ -134,9 +160,14 @@ const StockList = () => {
   };
 
   const handleSaveChanges = async () => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("Item")
-      .update(selectedItem)
+      .update({
+        itemName: selectedItem.itemName,
+        itemDesc: selectedItem.itemDesc,
+        itemPrice: selectedItem.itemPrice,
+        itemQTY: selectedItem.itemQTY,
+      })
       .eq("itemID", selectedItem.itemID);
 
     if (error) {

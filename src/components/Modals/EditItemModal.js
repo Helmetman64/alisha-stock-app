@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
 const EditItemModal = ({
@@ -10,10 +10,30 @@ const EditItemModal = ({
   handleInputChange,
   handleDeleteButton,
 }) => {
+  const [selectedVariation, setSelectedVariation] = useState(null);
+
   const preventMinus = (e) => {
     if (e.code === "Minus") {
       e.preventDefault();
     }
+  };
+
+  const handleVariationChange = (e) => {
+    const variationID = e.target.value;
+
+    // Ensure selectedItem and variations are correctly populated
+    if (!selectedItem || !selectedItem.variations) {
+      console.error("Selected item or variations array is missing.");
+      return;
+    }
+
+    // Find the selected variation
+    const variation = selectedItem.variations.find(
+      (v) => v.variationID.toString() === variationID.toString()
+    );
+
+    // Update state with the selected variation
+    setSelectedVariation(variation);
   };
 
   if (!selectedItem) {
@@ -57,6 +77,28 @@ const EditItemModal = ({
             </Form.Control.Feedback>
           </Form.Group>
 
+          {/* Display dropdown if item has variations */}
+          {selectedItem.variations && selectedItem.variations.length > 0 && (
+            <Form.Group controlId="formItemVariations">
+              <Form.Label>Select Variation</Form.Label>
+              <Form.Control
+                as="select"
+                onChange={handleVariationChange}
+                value={selectedVariation ? selectedVariation.variationID : ""}
+              >
+                <option value="">Choose a variation...</option>
+                {selectedItem.variations.map((variation) => (
+                  <option
+                    key={variation.variationID}
+                    value={variation.variationID}
+                  >
+                    {variation.variationName} - ${variation.variationPrice}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+          )}
+
           <Form.Group controlId="formItemPrice">
             <Form.Label>Item Price</Form.Label>
             <Form.Control
@@ -64,7 +106,11 @@ const EditItemModal = ({
               type="number"
               name="itemPrice"
               placeholder="Price"
-              value={selectedItem.itemPrice}
+              defaultValue={
+                selectedVariation
+                  ? selectedVariation.variationPrice
+                  : selectedItem.itemPrice
+              }
               onChange={handleInputChange}
               onKeyDown={preventMinus}
               min="1"
@@ -81,7 +127,11 @@ const EditItemModal = ({
               type="number"
               name="itemQTY"
               placeholder="Quantity"
-              value={selectedItem.itemQTY}
+              defaultValue={
+                selectedVariation
+                  ? selectedVariation.variationQTY
+                  : selectedItem.itemQTY
+              }
               onChange={handleInputChange}
               onKeyDown={preventMinus}
               min="1"

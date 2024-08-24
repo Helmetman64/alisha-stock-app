@@ -55,7 +55,7 @@ const StockCards = ({
                 }
                 onClick={
                   item.itemQTY !== 0 || !disableClick
-                    ? () => onCardClick(item)
+                    ? () => onCardClick(item, item.variations || [])
                     : null
                 }
               >
@@ -71,7 +71,9 @@ const StockCards = ({
                     </span>
                     <span className="bold-label">
                       Price:{" "}
-                      <span className="normal-value">${item.itemPrice}</span>
+                      <span className="normal-value">
+                        ${item.itemPrice || "Varies"}
+                      </span>
                     </span>
                   </Card.Text>
                 </Card.Body>
