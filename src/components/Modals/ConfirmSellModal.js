@@ -13,6 +13,7 @@ const ConfirmSellModal = ({
   deleteItem,
 }) => {
   const [errorMessage, setErrorMessage] = useState("");
+  console.log(items);
 
   const handleInputChange = (id, value) => {
     const item = items.find((item) => item.itemID === id);
@@ -23,7 +24,9 @@ const ConfirmSellModal = ({
       handleQuantityChange(id, newQuantity);
     } else if (newQuantity > item.itemQTY) {
       setErrorMessage(
-        `Cannot add more than ${item.itemQTY} items of ${item.itemName} to the cart!`
+        `Cannot add more than ${item.itemQTY} items of ${
+          item.itemName || item.variationName
+        } to the cart!`
       );
     }
   };
@@ -69,9 +72,9 @@ const ConfirmSellModal = ({
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.itemID}>
-                  <td>{item.itemName}</td>
-                  <td>${item.itemPrice.toFixed(2)}</td>
+                <tr key={`${item.itemID}-${item.variationID}`}>
+                  <td>{item.variationName || item.itemName}</td>
+                  <td>${item.variationPrice || item.itemPrice}</td>
                   <td>
                     <div className="stock-quantity">
                       <Button
@@ -98,7 +101,12 @@ const ConfirmSellModal = ({
                       </Button>
                     </div>
                   </td>
-                  <td>${(item.itemPrice * item.currentQTY).toFixed(2)}</td>
+                  <td>
+                    $
+                    {(
+                      (item.variationPrice || item.itemPrice) * item.currentQTY
+                    ).toFixed(2)}
+                  </td>
                   <td>
                     <i
                       className="bi bi-trash clickable-icon"

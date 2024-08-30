@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import supabase from "../services/supabaseClient";
-import Card from "react-bootstrap/Card";
 import StockCards from "./StockCards";
 import EditableQuantity from "./Side-Cart/EditableQty";
-import { Button } from "react-bootstrap";
+import { Button, Card } from "react-bootstrap";
 import ConfirmSellModal from "./Modals/ConfirmSellModal";
 import SoldModal from "./Modals/SoldModal";
 
@@ -14,21 +13,44 @@ export default function Home() {
   const [items, setItems] = useState([]);
   const [clickedCards, setClickedCards] = useState({});
   const [showTotal, setShowTotal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // Error message state
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchItems = async () => {
-    const { data, error } = await supabase.from("Item").select("*");
+  const fetchItemsAndVariations = async () => {
+    // Fetch items
+    const { data: itemsData, error: itemsError } = await supabase
+      .from("Item")
+      .select("*");
 
-    if (error) {
+    if (itemsError) {
       setFetchError("Could not fetch the items");
       setItems([]);
-    } else {
-      setItems(data);
+      return;
     }
+
+    // Fetch variations
+    const { data: variationsData, error: variationsError } = await supabase
+      .from("ItemVariation")
+      .select("*");
+
+    if (variationsError) {
+      setFetchError("Could not fetch the variations");
+      setItems([]);
+      return;
+    }
+
+    // Combine items and variations
+    const itemsWithVariations = itemsData.map((item) => ({
+      ...item,
+      variations: variationsData.filter(
+        (variation) => variation.itemID === item.itemID
+      ),
+    }));
+
+    setItems(itemsWithVariations);
   };
 
   useEffect(() => {
-    fetchItems();
+    fetchItemsAndVariations();
   }, []);
 
   const handleCloseSellItemPopup = () => {
@@ -37,14 +59,14 @@ export default function Home() {
 
   const handleCloseSoldModal = () => {
     setShowSoldPopup(false);
-    fetchItems();
+    fetchItemsAndVariations();
   };
 
-  const handleCardClick = useCallback((item) => {
+  const handleCardClick = useCallback((item, variations) => {
     const id = item.itemID;
     const stock = item.itemQTY;
     setShowTotal(true);
-    setErrorMessage(""); // Clear previous error message
+    setErrorMessage("");
 
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
@@ -58,7 +80,7 @@ export default function Home() {
         }
       } else {
         if (stock > 0) {
-          updatedClickedCards[id] = { id, currentQTY: 1 };
+          updatedClickedCards[id] = { id, currentQTY: 1, variations };
         } else {
           setErrorMessage(
             `Cannot add ${item.itemName} to the cart as it is out of stock.`
@@ -69,91 +91,160 @@ export default function Home() {
     });
   }, []);
 
-  const handleQuantityChange = (id, newQuantity) => {
-    const item = items.find((item) => item.itemID === id);
-    const stock = item.itemQTY;
+  const handleVariationSelect = (itemID, variation) => {
+    console.log(
+      `Selected variation ${variation?.variationName} for item ${itemID}`
+    );
 
-    // Cap the new quantity at the stock level
-    const cappedQuantity = Math.min(newQuantity, stock);
+    // Construct a unique key for the item + variation
+    const variationKey = `${itemID}${
+      variation ? `-${variation.variationID}` : ""
+    }`;
+
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
-      if (updatedClickedCards[id]) {
-        updatedClickedCards[id].currentQTY = Math.max(0, cappedQuantity);
-        if (updatedClickedCards[id].currentQTY === 0) {
-          const { [id]: _, ...remaining } = updatedClickedCards;
-          return remaining;
-        }
+
+      if (updatedClickedCards[variationKey]) {
+        // If the variation is already in the cart, increment the quantity
+        updatedClickedCards[variationKey].currentQTY += 1;
+      } else {
+        // If the variation is not in the cart, add it with a quantity of 1
+        updatedClickedCards[variationKey] = {
+          id: itemID,
+          name: variation
+            ? variation.variationName
+            : items.find((item) => item.itemID === itemID)?.itemName,
+          currentQTY: 1,
+          variation: variation || null,
+        };
       }
+
       return updatedClickedCards;
     });
-
-    // Clear error message
-    setErrorMessage("");
   };
 
-  const handleRemoveItem = (id) => {
-    setClickedCards((prevClickedCards) => {
-      const { [id]: _, ...remainingClickedCards } = prevClickedCards;
-      if (Object.keys(remainingClickedCards).length === 0) {
-        setShowTotal(false);
+  const handleRemoveItem = (itemID, variationID = null) => {
+    const updatedClickedCards = { ...clickedCards };
+
+    if (variationID) {
+      // Remove the specific item variation if variationID is provided
+      delete updatedClickedCards[`${itemID}-${variationID}`];
+    } else {
+      // Remove all variations of the item or the item itself if no variationID is provided
+      for (const key in updatedClickedCards) {
+        if (key.startsWith(`${itemID}-`)) {
+          delete updatedClickedCards[key];
+        } else if (key === `${itemID}`) {
+          delete updatedClickedCards[key];
+        }
       }
-      return remainingClickedCards;
+    }
+
+    setClickedCards(updatedClickedCards);
+  };
+
+  const handleQuantityChange = (itemID, variationID, newQuantity) => {
+    setClickedCards((prevClickedCards) => {
+      const updatedClickedCards = { ...prevClickedCards };
+      const key = variationID ? `${itemID}-${variationID}` : itemID;
+
+      if (updatedClickedCards[key]) {
+        const newQty = Math.max(newQuantity, 0);
+        updatedClickedCards[key] = {
+          ...updatedClickedCards[key],
+          currentQTY: newQty,
+        };
+      }
+
+      return updatedClickedCards;
     });
   };
 
-  const handleIncrementQuantity = (id) => {
+  const handleIncrementQuantity = (itemID, variationID = null) => {
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
-      const item = items.find((item) => item.itemID === id);
-      if (updatedClickedCards[id]) {
-        if (updatedClickedCards[id].currentQTY < item.itemQTY) {
-          updatedClickedCards[id].currentQTY += 1;
-          setErrorMessage(""); // Clear error message
+      const key = variationID ? `${itemID}-${variationID}` : itemID;
+      const item = items.find((item) => item.itemID === itemID);
+      const variation = item?.variations?.find(
+        (variation) => variation.variationID === variationID
+      );
+
+      console.log("Attempting to increment quantity for key:", key);
+      console.log("Clicked Cards:", updatedClickedCards);
+
+      if (updatedClickedCards[key]) {
+        const stock = variation ? variation.variationQTY : item.itemQTY;
+        if (updatedClickedCards[key].currentQTY < stock) {
+          updatedClickedCards[key].currentQTY += 1;
+          setErrorMessage(""); // Clear error message if quantity is updated
         } else {
           setErrorMessage(
-            `Cannot add more than ${item.itemQTY} items of ${item.itemName} to the cart.`
+            `Cannot add more than ${stock} items of ${
+              variation ? variation.variationName : item.itemName
+            } to the cart.`
           );
         }
+      } else {
+        console.error(
+          `Item or variation with key ${key} not found in clickedCards.`
+        );
       }
+
       return updatedClickedCards;
     });
   };
 
-  const handleDecrementQuantity = (id) => {
+  const handleDecrementQuantity = (itemID, variationID = null) => {
     setClickedCards((prevClickedCards) => {
       const updatedClickedCards = { ...prevClickedCards };
-      if (updatedClickedCards[id] && updatedClickedCards[id].currentQTY > 1) {
-        updatedClickedCards[id].currentQTY -= 1;
+      const key = variationID ? `${itemID}-${variationID}` : itemID;
+
+      if (updatedClickedCards[key] && updatedClickedCards[key].currentQTY > 1) {
+        updatedClickedCards[key].currentQTY -= 1;
       } else {
-        const { [id]: _, ...remaining } = updatedClickedCards;
+        const { [key]: _, ...remaining } = updatedClickedCards;
         return remaining;
       }
+
       return updatedClickedCards;
     });
   };
 
   const calculateTotal = () => {
     return Object.values(clickedCards)
-      .reduce((total, { id, currentQTY }) => {
+      .reduce((total, { id, currentQTY, variation }) => {
         const item = items.find((item) => item.itemID === id);
         if (item) {
-          return total + item.itemPrice * currentQTY;
+          // Use variation price if it exists, otherwise use item price
+          const price = variation?.variationPrice || item.itemPrice;
+          return total + price * currentQTY;
         }
         return total;
       }, 0)
       .toFixed(2);
   };
 
-  const cartItems = Object.values(clickedCards).map(({ id, currentQTY }) => {
-    const item = items.find((item) => item.itemID === id);
-    return {
-      itemID: id,
-      itemName: item?.itemName,
-      itemPrice: item?.itemPrice,
-      currentQTY: currentQTY,
-      itemQTY: item?.itemQTY,
-    };
-  });
+  const cartItems = Object.values(clickedCards).map(
+    ({ id, currentQTY, variation }) => {
+      const item = items.find((item) => item.itemID === id);
+      const variationData = item?.variations?.find(
+        (variationItem) => variationItem.variationID === variation?.variationID
+      );
+
+      return {
+        itemID: id,
+        itemName: variationData ? variationData.variationName : item?.itemName,
+        itemPrice: variationData
+          ? variationData.variationPrice
+          : item?.itemPrice,
+        currentQTY,
+        itemQTY: variationData ? variationData.variationQTY : item?.itemQTY,
+        variationID: variationData?.variationID || null,
+        variationName: variationData?.variationName || null,
+        variationPrice: variationData?.variationPrice || null,
+      };
+    }
+  );
 
   const handleConfirmSale = async () => {
     const saleDate = new Date().toISOString();
@@ -163,7 +254,6 @@ export default function Home() {
       totalAmount += item.itemPrice * item.currentQTY;
     });
 
-    // Insert into Sales table
     const { data: saleData, error: saleError } = await supabase
       .from("Sales")
       .insert([{ saleDate, totalAmount }])
@@ -176,7 +266,6 @@ export default function Home() {
 
     const saleID = saleData[0].saleID;
 
-    // Insert into SaleItems table
     const saleItemsData = cartItems.map((item) => ({
       saleID,
       itemID: item.itemID,
@@ -194,7 +283,6 @@ export default function Home() {
       return;
     }
 
-    // Update stock levels
     for (const item of cartItems) {
       const { itemID, currentQTY } = item;
       const { data: itemData, error: itemError } = await supabase
@@ -220,9 +308,9 @@ export default function Home() {
       }
     }
 
-    setShowSellItemPopup(false); // Hide ConfirmSellModal
-    setClickedCards({}); // Reset cart items
-    setShowSoldPopup(true); // Show SoldModal
+    setShowSellItemPopup(false);
+    setClickedCards({});
+    setShowSoldPopup(true);
   };
 
   return (
@@ -236,41 +324,61 @@ export default function Home() {
           <h1>Cart is empty :(</h1>
         ) : (
           <>
-            {Object.values(clickedCards).map(({ id, currentQTY }) => {
-              const item = items.find((item) => item.itemID === id);
-              return (
-                <div key={id}>
-                  <Card style={{ width: "100%" }}>
-                    <Card.Body>
-                      <Card.Title>
-                        <div className="cart-item-title">
-                          {item?.itemName}
-                          <i
-                            className="bi bi-trash clickable-icon"
-                            onClick={() => handleRemoveItem(id)}
-                          ></i>
-                        </div>
-                      </Card.Title>
-                      <Card.Text className="d-flex justify-content-between">
-                        <EditableQuantity
-                          initialQuantity={currentQTY}
-                          onQuantityChange={(newQuantity) =>
-                            handleQuantityChange(id, newQuantity)
-                          }
-                          maxQuantity={item?.itemQTY}
-                        />
-                        <span className="bold-label">
-                          Price:{" "}
-                          <span className="normal-value">
-                            ${(item?.itemPrice * currentQTY).toFixed(2)}
+            {Object.values(clickedCards).map(
+              ({ id, name, currentQTY, variation }) => {
+                const item = items.find((item) => item.itemID === id);
+
+                return (
+                  <div
+                    key={id + (variation ? `-${variation.variationID}` : "")}
+                  >
+                    <Card style={{ width: "100%" }}>
+                      <Card.Body>
+                        <Card.Title>
+                          <div className="cart-item-title">
+                            {name || item.itemName}
+                            <i
+                              className="bi bi-trash clickable-icon"
+                              onClick={() =>
+                                handleRemoveItem(
+                                  id,
+                                  variation ? variation.variationID : null
+                                )
+                              }
+                            ></i>
+                          </div>
+                        </Card.Title>
+                        <Card.Text className="d-flex justify-content-between">
+                          <EditableQuantity
+                            initialQuantity={currentQTY}
+                            onQuantityChange={(newQuantity) =>
+                              handleQuantityChange(
+                                id,
+                                variation ? variation.variationID : null,
+                                newQuantity
+                              )
+                            }
+                            maxQuantity={
+                              variation?.variationQTY || item?.itemQTY
+                            }
+                          />
+                          <span className="bold-label">
+                            Price:{" "}
+                            <span className="normal-value">
+                              $
+                              {(
+                                (variation?.variationPrice || item?.itemPrice) *
+                                currentQTY
+                              ).toFixed(2)}
+                            </span>
                           </span>
-                        </span>
-                      </Card.Text>
-                    </Card.Body>
-                  </Card>
-                </div>
-              );
-            })}
+                        </Card.Text>
+                      </Card.Body>
+                    </Card>
+                  </div>
+                );
+              }
+            )}
             {showTotal && (
               <div className="total-section">
                 <hr />
@@ -286,15 +394,22 @@ export default function Home() {
                 Sell Items
               </Button>
             </div>
+            {errorMessage && (
+              <div className="error-message">{errorMessage}</div>
+            )}
           </>
         )}
       </div>
+
       <div className="home">
         <StockCards
           items={items}
           onCardClick={handleCardClick}
-          disableClick={true}
-          disablePointer={true}
+          onAddNewItemClick={() => {}}
+          disableClick={false}
+          disablePointer={false}
+          showDropdown={true} // Ensure this is true when you want to show the dropdown
+          onVariationSelect={handleVariationSelect}
         />
       </div>
       <ConfirmSellModal
@@ -312,5 +427,3 @@ export default function Home() {
     </div>
   );
 }
-
-//.

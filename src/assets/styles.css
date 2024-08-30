@@ -151,8 +151,13 @@ text-align: right;
   display: flex;
 }
 
-.total-sales-container {
-  /* width: 100%; */
+.dropdown {
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  z-index: 1000;
 }
 
 
