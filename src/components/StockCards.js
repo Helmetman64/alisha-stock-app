@@ -2,6 +2,8 @@ import React from "react";
 import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownButton from "react-bootstrap/DropdownButton";
 
 const StockCards = ({
   items,
@@ -9,12 +11,19 @@ const StockCards = ({
   onAddNewItemClick,
   disableClick,
   disablePointer,
+  showDropdown,
+  onVariationSelect,
 }) => {
   return (
     <Row>
       {items &&
-        items.map((item) =>
-          item.isAddNewItemCard ? (
+        items.map((item) => {
+          const hasStock = item.itemQTY > 0;
+          const hasNoVariations =
+            !item.variations || item.variations.length === 0;
+          const isClickable = hasStock && hasNoVariations && !disablePointer;
+
+          return item.isAddNewItemCard ? (
             <Col
               key={item.itemID}
               xs={12}
@@ -50,14 +59,8 @@ const StockCards = ({
                   width: "100%",
                   backgroundColor: item.itemQTY === 0 ? "#dbd9d9" : "inherit",
                 }}
-                className={
-                  item.itemQTY !== 0 || !disablePointer ? "clickable-card" : " "
-                }
-                onClick={
-                  item.itemQTY !== 0 || !disableClick
-                    ? () => onCardClick(item)
-                    : null
-                }
+                className={isClickable ? "clickable-card" : ""}
+                onClick={isClickable ? () => onCardClick(item) : null}
               >
                 <Card.Body>
                   <Card.Title>{item.itemName}</Card.Title>
@@ -65,20 +68,47 @@ const StockCards = ({
                     {item.itemDesc}
                   </Card.Subtitle>
                   <Card.Text className="d-flex justify-content-between">
-                    <span className="bold-label">
-                      Stock Level:{" "}
-                      <span className="normal-value">{item.itemQTY}</span>
-                    </span>
-                    <span className="bold-label">
-                      Price:{" "}
-                      <span className="normal-value">${item.itemPrice}</span>
-                    </span>
+                    {hasNoVariations ? (
+                      <>
+                        <span className="bold-label">
+                          Stock Level:{" "}
+                          <span className="normal-value">{item.itemQTY}</span>
+                        </span>
+                        <span className="bold-label">
+                          Price:{" "}
+                          <span className="normal-value">
+                            ${item.itemPrice || "Varies"}
+                          </span>
+                        </span>
+                      </>
+                    ) : null}
                   </Card.Text>
+                  {showDropdown &&
+                    item.variations &&
+                    item.variations.length > 0 && (
+                      <Dropdown>
+                        <DropdownButton
+                          id="dropdown-basic-button"
+                          title="Select Variation"
+                        >
+                          {item.variations.map((variation) => (
+                            <Dropdown.Item
+                              key={variation.variationID}
+                              onClick={() =>
+                                onVariationSelect(item.itemID, variation)
+                              }
+                            >
+                              {variation.variationName}
+                            </Dropdown.Item>
+                          ))}
+                        </DropdownButton>
+                      </Dropdown>
+                    )}
                 </Card.Body>
               </Card>
             </Col>
-          )
-        )}
+          );
+        })}
     </Row>
   );
 };
