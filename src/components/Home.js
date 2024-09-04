@@ -7,7 +7,7 @@ import ConfirmSellModal from "./Modals/ConfirmSellModal";
 import SoldModal from "./Modals/SoldModal";
 
 export default function Home() {
-  const [fetchError, setFetchError] = useState(null);
+  const [setFetchError] = useState(null);
   const [showSellItemPopup, setShowSellItemPopup] = useState(false);
   const [showSoldPopup, setShowSoldPopup] = useState(false);
   const [items, setItems] = useState([]);
